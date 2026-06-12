@@ -31,6 +31,14 @@ td:first-child{color:var(--mut)}td:first-child,td:nth-child(2){text-align:left}
 .owed{color:#ffb86b}.zero{color:var(--mut)}
 .foot{margin-top:22px;font-size:11.5px;color:var(--mut);border-top:1px solid var(--line);padding-top:12px}
 #more{margin:14px 0}
+.exp{cursor:pointer;user-select:none}
+tr.det>td{background:#0e1420;padding:10px 14px;text-align:left}
+.ct{border-collapse:collapse;font-size:12px;margin:2px 0 6px}
+.ct td,.ct th{padding:3px 12px;border:0;text-align:right;white-space:nowrap}
+.ct th{color:var(--mut);text-transform:uppercase;font-size:10px;letter-spacing:.4px}
+.ct td:first-child,.ct th:first-child{text-align:left}
+.ok2{color:var(--ok)}.bad2{color:var(--red)}.dim2{color:var(--mut)}
+.spin{display:inline-block;width:9px;height:9px;border:2px solid var(--mut);border-top-color:transparent;border-radius:50%;animation:r 1s linear infinite;vertical-align:-1px}@keyframes r{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -92,8 +100,8 @@ function render(){
   el('meta').textContent = `${NAMES[st.chain]} — ${fmt(r.length,0)} addresses · owed ${fmt(tOwed,2)} COMP · claimed ${fmt(tCl,2)} COMP` + (st.q?` (filtered)`:'');
   const ex = EXPLORERS[st.chain];
   const showLb = st.rows.some(x=>x[5]!==null);
-  el('rows').innerHTML = r.slice(0,st.limit).map((x,i)=>`<tr>
-    <td>${i+1}</td>
+  el('rows').innerHTML = r.slice(0,st.limit).map((x,i)=>`<tr data-addr="${x[0]}">
+    <td class="exp" title="expand: per-comet breakdown">▸ ${i+1}</td>
     <td><a href="${ex}/address/${x[0]}" target="_blank" rel="noopener">${x[0]}</a></td>
     <td class="${x[1]>0?'owed':'zero'}">${fmt(x[1])}</td>
     <td class="${x[2]>0?'':'zero'}">${fmt(x[2])}</td>
@@ -114,6 +122,94 @@ el('csv').addEventListener('click', ()=>{
   a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
   a.download = `comp-rewards-${st.chain}.csv`; a.click();
 });
+
+// ---- live per-comet breakdown (claims are per comet: claim(comet, account, true)) ----
+const SELX = { owed:'0x41e0cad6', claimed:'0x65e12392', balanceOf:'0x70a08231', agg3:'0x82ad56cb' };
+const RPC_META = {
+ mainnet:{rpcs:['https://ethereum-rpc.publicnode.com','https://eth.drpc.org'],rewards:'0x1B0e765F6224C21223AeA2af16c1C46E38885a40',token:'0xc00e94Cb662C3520282E6f5717214004A7f26888',comets:[['USDC','0xc3d688B66703497DAA19211EEdff47f25384cdc3'],['WETH','0xA17581A9E3356d9A858b789D68B4d866e593aE94'],['USDT','0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840'],['wstETH','0x3D0bb1ccaB520A66e607822fC55BC921738fAFE3'],['USDS','0x5D409e56D886231aDAf00c8775665AD0f9897b56'],['WBTC','0xe85Dc543813B8c2CFEaAc371517b925a166a9293']]},
+ arbitrum:{rpcs:['https://arbitrum-one-rpc.publicnode.com','https://arb1.arbitrum.io/rpc'],rewards:'0x88730d254A2f7e6AC8388c3198aFd694bA9f7fae',token:'0x354A6dA3fcde098F8389cad84b0182725c6C91dE',comets:[['USDC','0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf'],['USDC.e','0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA'],['WETH','0x6f7D514bbD4aFf3BcD1140B7344b32f063dEe486'],['USDT','0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07']]},
+ base:{rpcs:['https://base-rpc.publicnode.com','https://mainnet.base.org'],rewards:'0x123964802e6ABabBE1Bc9547D72Ef1B69B00A6b1',token:'0x9e1028F5F1D5eDE59748FFceE5532509976840E0',comets:[['USDC','0xb125E6687d4313864e53df431d5425969c15Eb2F'],['WETH','0x46e6b214b524310239732D51387075E0e70970bf'],['USDbC','0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf'],['AERO','0x784efeB622244d2348d4F2522f8860B96fbEcE89'],['USDS','0x2c776041CCFe903071AF44aa147368a9c8EEA518']]},
+ polygon:{rpcs:['https://polygon-bor-rpc.publicnode.com','https://polygon.gateway.tenderly.co'],rewards:'0x45939657d1CA34A8FA39A924B71D28Fe8431e581',token:'0x8505b9d2254A7Ae468c0E9dd10Ccea3A837aef5c',comets:[['USDC.e','0xF25212E676D1F7F89Cd72fFEe66158f541246445'],['USDT','0xaeB318360f27748Acb200CE616E389A6C9409a07']]},
+ optimism:{rpcs:['https://optimism-rpc.publicnode.com','https://optimism.gateway.tenderly.co'],rewards:'0x443EA0340cb75a160F31A440722dec7b5bc3C2E9',token:'0x7e7d4467112689329F7e06571eD0E8CbAd4910eE',comets:[['USDC','0x2e44e174f7D53F0212823acC11C01A11d58c5bCB'],['USDT','0x995E394b8B2437aC8Ce61Ee0bC610D617962B214'],['WETH','0xE36A30D249f7761327fd973001A32010b521b6Fd']]},
+ unichain:{rpcs:['https://unichain-rpc.publicnode.com','https://mainnet.unichain.org'],rewards:'0x6f7D514bbD4aFf3BcD1140B7344b32f063dEe486',token:'0xdf78e4F0A8279942ca68046476919A90F2288656',comets:[['USDC','0x2c7118c4C88B9841FCF839074c26Ae8f035f2921'],['WETH','0x6C987dDE50dB1dcDd32Cd4175778C2a291978E2a']]},
+ linea:{rpcs:['https://linea-rpc.publicnode.com','https://rpc.linea.build'],rewards:'0x2c7118c4C88B9841FCF839074c26Ae8f035f2921',token:'0x0EcE76334fB560F2B1a49a60E38Cf726B02203F0',comets:[['USDC','0x8D38A3d6B3c3B7d96D6536DA7Eef94A9d7dbC991'],['WETH','0x60F2058379716A64a7A5d29219397e79bC552194']]},
+ mantle:{rpcs:['https://mantle-rpc.publicnode.com','https://mantle.gateway.tenderly.co'],rewards:'0xCd83CbBFCE149d141A5171C3D6a0F0fCCeE225Ab',token:'0x52b7d8851d6CCBC6342ba0855Be65F7B82A3F17f',comets:[['USDe','0x606174f62cd968d8e684c645080fa694c1D7786E']]}
+};
+const sx = s => s.startsWith('0x') ? s.slice(2) : s;
+const p32 = h => sx(h).padStart(64,'0');
+const pA = a => '0'.repeat(24) + sx(a).toLowerCase();
+function encAgg3(calls){
+  const n = calls.length; let tuples = [];
+  for (const c of calls){ const d = sx(c.callData); const L = d.length/2;
+    tuples.push(pA(c.target) + p32('1') + p32('60') + p32(L.toString(16)) + d.padEnd(Math.ceil(L/32)*64,'0')); }
+  let offs = [], cur = n*32;
+  for (const t of tuples){ offs.push(p32(cur.toString(16))); cur += t.length/2; }
+  return SELX.agg3 + p32('20') + p32(n.toString(16)) + offs.join('') + tuples.join('');
+}
+function decAgg3(hex){
+  const h = sx(hex); const rd = i => BigInt('0x'+h.slice(i*64,(i+1)*64));
+  const ao = Number(rd(0))/32, n = Number(rd(ao)), base = ao+1, out = [];
+  for (let i=0;i<n;i++){ const to = base + Number(rd(base+i))/32;
+    const ok = rd(to)===1n; const bo = to + Number(rd(to+1))/32; const len = Number(rd(bo));
+    out.push({ok, data:'0x'+h.slice((bo+1)*64,(bo+1)*64+len*2)}); }
+  return out;
+}
+async function rpcx(m, data, attempt=0){
+  const url = m.rpcs[attempt % m.rpcs.length];
+  try{
+    const j = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_call',params:[{to:'0xcA11bde05977b3631167028862bE2a173976CA11',data},'latest']})}).then(r=>r.json());
+    if (j.error) throw new Error(j.error.message);
+    return j.result;
+  }catch(e){ if (attempt+1 < m.rpcs.length*2) return rpcx(m, data, attempt+1); throw e; }
+}
+const expCache = {};
+async function fetchUserComets(chainKey, addr){
+  const key = chainKey + addr;
+  if (expCache[key]) return expCache[key];
+  const m = RPC_META[chainKey];
+  if (!m) throw new Error('no live config for ' + chainKey);
+  const calls = m.comets.flatMap(([nm,c])=>[
+    {target:m.rewards, callData: SELX.owed + pA(c) + pA(addr)},
+    {target:m.rewards, callData: SELX.claimed + pA(c) + pA(addr)},
+  ]);
+  calls.push({target:m.token, callData: SELX.balanceOf + pA(m.rewards)});
+  const res = decAgg3(await rpcx(m, encAgg3(calls)));
+  const bal = Number(BigInt(res[res.length-1].data))/1e18;
+  const comets = m.comets.map(([nm,c],i)=>{
+    const oRaw = res[i*2].ok && sx(res[i*2].data).length>=128 ? BigInt('0x'+sx(res[i*2].data).slice(64,128)) : 0n;
+    const cRaw = res[i*2+1].ok && res[i*2+1].data !== '0x' ? BigInt(res[i*2+1].data) : 0n;
+    return { name:nm, addr:c, owed:Number(oRaw)/1e18, claimed:Number(cRaw)/1e18 };
+  });
+  const out = { comets, bal, rewards:m.rewards };
+  expCache[key] = out;
+  return out;
+}
+function detailHtml(d, chainKey){
+  const ex = EXPLORERS[chainKey];
+  const rows = d.comets.filter(c=>c.owed>0.000001||c.claimed>0.000001);
+  if (!rows.length) return 'no rewards on any comet (live read)';
+  return `<table class="ct"><tr><th>comet (claim target)</th><th>owed now (live)</th><th>claimed lifetime</th><th>claimable?</th></tr>` +
+    rows.map(c=>`<tr><td>c${c.name}v3 <a href="${ex}/address/${c.addr}" target="_blank" rel="noopener">${c.addr.slice(0,10)}…</a></td>
+      <td class="${c.owed>0?'owed':''}">${fmt(c.owed)}</td><td>${fmt(c.claimed)}</td>
+      <td>${c.owed<=0.000001?'<span class="dim2">—</span>':(c.owed<=d.bal?'<span class="ok2">✓ claimable now</span>':`<span class="bad2">✗ reverts — contract holds ${fmt(d.bal,2)}</span>`)}</td></tr>`).join('') +
+    `</table><span class="dim2">claim per comet: <code>CometRewards.claim(comet, account, true)</code> on <a href="${ex}/address/${d.rewards}" target="_blank" rel="noopener">${d.rewards.slice(0,10)}…</a> · live on-chain reads, may differ slightly from the snapshot table</span>`;
+}
+document.getElementById('rows').addEventListener('click', async (e)=>{
+  if (e.target.closest('a')) return;
+  const tr = e.target.closest('tr[data-addr]');
+  if (!tr) return;
+  const addr = tr.dataset.addr;
+  const next = tr.nextElementSibling;
+  if (next && next.classList.contains('det')){ next.remove(); tr.cells[0].innerHTML = tr.cells[0].innerHTML.replace('▾','▸'); return; }
+  tr.cells[0].innerHTML = tr.cells[0].innerHTML.replace('▸','▾');
+  const det = document.createElement('tr'); det.className = 'det';
+  const cols = document.querySelectorAll('#heads th').length;
+  det.innerHTML = `<td colspan="${cols}">loading live per-comet data… <span class="spin"></span></td>`;
+  tr.after(det);
+  try { det.firstElementChild.innerHTML = detailHtml(await fetchUserComets(st.chain, addr), st.chain); }
+  catch (err) { det.firstElementChild.innerHTML = '<span class="bad2">live read failed: ' + String(err.message||err).slice(0,80) + '</span>'; }
+});
+
 init();
 </script>
 </body>
