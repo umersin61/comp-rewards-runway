@@ -75,7 +75,7 @@ tr:last-child td{border-bottom:0}
   <div id="cards"></div>
   <div class="foot">
     <p><b>how to read this:</b> each chain has one CometRewards contract that every comet on that chain pays claims from. <b>accruing</b> = Σ (baseTrackingSupplySpeed + baseTrackingBorrowSpeed) ÷ 10¹⁵ × 86400 across comets (zeroed where the pool is below <i>baseMinForRewards</i>). <b>gross runway</b> = balance ÷ accrual. <b>effective runway</b> = balance ÷ max(accrual, trailing claim rate) — rewards must be <i>claimed</i>, so already-earned-but-unclaimed COMP is a liability on top of future accrual; the trailing claim rate (COMP actually transferred out of the rewards contract) is our proxy for that backlog being drawn down. When claims exceed accrual, the backlog is draining the balance faster than emissions alone suggest. The true total unclaimed backlog is not readable on-chain without indexing every user, so treat every runway here as an <i>upper bound</i>.</p>
-    <p><b>insolvency:</b> if an indexed unclaimed backlog (<code>unclaimed.json</code>, produced by the companion <code>indexer.mjs</code> which enumerates every historical user and simulates <code>getRewardOwed</code>) exceeds the contract balance, the chain flags red immediately — users' claims revert until a top-up lands, regardless of emission rate.</p><p><b>the red banner:</b> a COMP top-up needs a governance proposal (~2d review + 3d voting + 2d timelock, plus L2 bridging) — call it the governance lead time, configurable above. If a chain's effective runway is shorter than that, no proposal can land before the contract runs dry: rewards keep accruing but claims start reverting. Amber = a proposal must go up now to make it.</p>
+    <p><b>insolvency:</b> if an indexed unclaimed backlog (<code>unclaimed.json</code>, produced by the companion <code>indexer.mjs</code> which enumerates every historical user and simulates <code>getRewardOwed</code>) exceeds the contract balance, the chain flags red immediately — claims above the remaining balance revert until a top-up lands, regardless of emission rate.</p><p><b>the red banner:</b> a COMP top-up needs a governance proposal (~2d review + 3d voting + 2d timelock, plus L2 bridging) — call it the governance lead time, configurable above. If a chain's effective runway is shorter than that, no proposal can land before the contract runs dry: rewards keep accruing but claims start reverting. Amber = a proposal must go up now to make it.</p>
     <p><b>sources:</b> comet & rewards addresses from <a href="https://github.com/compound-finance/comet/tree/main/deployments" target="_blank" rel="noopener">compound-finance/comet</a> deployments. Unofficial community dashboard — verify before acting. Not affiliated with Compound Labs, the DAO, or (especially) Gauntlet.</p>
   </div>
 </div>
@@ -431,7 +431,7 @@ function chainStatus(c) {
   if (insolvent) {
     level = 'red'; label = '🔥 GAUNTLET FUCKED UP';
     note = 'INSOLVENT: owes ' + fmt(owed) + ' ' + c.symbol + ' of already-earned rewards but holds only ' + fmt(c.balance) +
-      ' — claims are reverting right now' + (c.perDay > 0.001 ? ', while ' + fmt(c.perDay) + '/day keeps accruing on top' : '') +
+      ' — cannot pay everyone: claims above the remaining balance revert (first come, first served)' + (c.perDay > 0.001 ? ', while ' + fmt(c.perDay) + '/day keeps accruing on top' : '') +
       '. Even an instant top-up needs ~' + g + 'd of governance to land.';
   } else if (drain <= 0.001) {
     level = 'off'; label = 'EMISSIONS OFF';
@@ -516,7 +516,7 @@ function backlogHtml(chain) {
   const snap = state.backlog.generatedAt ? new Date(state.backlog.generatedAt).toLocaleDateString() : '?';
   const short = Math.max(0, bl.totalUnclaimed - chain.balance);
   const sfTxt = bl.complete
-    ? (short > 0.01 ? ` — <span class="redtxt">shortfall: ${fmt(short)} ${chain.symbol} (claims revert)</span>` : ' — fully covered by balance')
+    ? (short > 0.01 ? ` — <span class="redtxt">shortfall: ${fmt(short)} ${chain.symbol} (claims above remaining balance revert)</span>` : ' — fully covered by balance')
     : ' (incomplete scan)';
   return `<div class="claims" style="border-color:#2a3550;background:#0e1420">
     <span><b>indexed unclaimed backlog:</b> ${fmt(bl.totalUnclaimed)} ${chain.symbol} owed to ${bl.users} users (snapshot ${snap})${sfTxt}</span>

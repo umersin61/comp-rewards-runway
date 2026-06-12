@@ -47,7 +47,7 @@ td:first-child{color:var(--mut)}td:first-child,td:nth-child(2){text-align:left}
     <thead><tr id="heads">
       <th data-k="rank">#</th><th data-k="addr">address</th>
       <th data-k="1">owed (unclaimed)</th><th data-k="2">claimed (lifetime)</th>
-      <th data-k="3">total earned</th><th data-k="4">claimed %</th><th data-k="5" id="lbHead" style="display:none">last activity</th>
+      <th data-k="3">total earned</th><th data-k="4">claimed %</th><th data-k="5" id="lbHead" style="display:none">last claim</th>
     </tr></thead>
     <tbody id="rows"></tbody>
   </table>
@@ -83,7 +83,7 @@ async function pick(k){
 function filtered(){
   const q = st.q.toLowerCase();
   let r = q ? st.rows.filter(x=>x[0].toLowerCase().includes(q)) : st.rows.slice();
-  r.sort((a,b)=>(a[st.sortK]<b[st.sortK]?1:-1)*(-st.dir));
+  r.sort((a,b)=>(((a[st.sortK]??-1)<(b[st.sortK]??-1))?1:-1)*(-st.dir));
   return r;
 }
 function render(){
@@ -99,7 +99,7 @@ function render(){
     <td class="${x[2]>0?'':'zero'}">${fmt(x[2])}</td>
     <td>${fmt(x[3])}</td>
     <td class="${x[4]<50?'owed':''}">${x[4].toFixed(1)}%</td>
-    ${showLb?`<td>${x[5]!==null?'block '+x[5]:'—'}</td>`:''}
+    ${showLb?`<td>${x[5]?new Date(x[5]*1000).toISOString().slice(0,10):'—'}</td>`:''}
   </tr>`).join('');
   el('more').style.display = r.length > st.limit ? '' : 'none';
   document.querySelectorAll('#heads th').forEach(h=>h.classList.toggle('sorted', h.dataset.k==String(st.sortK)));
@@ -109,7 +109,7 @@ el('more').addEventListener('click', ()=>{ st.limit += 200; render(); });
 document.querySelectorAll('#heads th').forEach(h=>h.addEventListener('click', ()=>{ const k = Number(h.dataset.k); if(!isNaN(k)&&k>=1){ st.dir = st.sortK===k ? -st.dir : -1; st.sortK = k; render(); } }));
 el('csv').addEventListener('click', ()=>{
   const r = filtered();
-  const csv = 'address,owed_comp,claimed_comp,total_earned,claimed_pct\n' + r.map(x=>`${x[0]},${x[1]},${x[2]},${x[3]},${x[4].toFixed(2)}`).join('\n');
+  const csv = 'address,owed_comp,claimed_comp,total_earned,claimed_pct,last_claim\n' + r.map(x=>`${x[0]},${x[1]},${x[2]},${x[3]},${x[4].toFixed(2)},${x[5]?new Date(x[5]*1000).toISOString().slice(0,10):''}`).join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
   a.download = `comp-rewards-${st.chain}.csv`; a.click();

@@ -546,8 +546,127 @@ async function sweepClaimed(chain, decimals, claimedCacheFile) {
   return claimed;
 }
 
+// ─── claim-log scan (checkpointed to cache/<chain>-claimlogs.json) ────────────
+async function scanClaimLogsForChain(chain, rewardToken) {
+  if (!rewardToken) return {};
+  const cacheFile = join(CACHE_DIR, chain.key + '-claimlogs.json');
+  let cache;
+  try { cache = JSON.parse(readFileSync(cacheFile, 'utf8')); } catch (_) { cache = {}; }
+  if (!cache.recipients) cache.recipients = {};
+  if (!cache.scannedTo) cache.scannedTo = 0;
+
+  const rpcs = chain.rpcs;
+  const latestHex = await rpcCall(rpcs, 'eth_blockNumber', []);
+  const latest = parseInt(latestHex, 16);
+
+  // Deploy block: use cached value, or binary-search (tolerating pruned-state errors)
+  if (!cache.deployBlock) {
+    if (chain.knownDeployBlock) {
+      cache.deployBlock = chain.knownDeployBlock;
+    } else {
+      let lo = 1, hi = latest;
+      for (const frac of [0.05, 0.15, 0.3, 0.5, 0.7, 0.9]) {
+        const blk = Math.floor(lo + (hi - lo) * frac);
+        try {
+          const code = await rpcCall(rpcs, 'eth_getCode', [chain.rewards, '0x' + blk.toString(16)]);
+          if (code && code.length > 4) { hi = blk; break; } else lo = blk;
+        } catch (_) { lo = blk; }
+      }
+      while (hi - lo > 200) {
+        const mid = Math.floor((lo + hi) / 2);
+        try {
+          const code = await rpcCall(rpcs, 'eth_getCode', [chain.rewards, '0x' + mid.toString(16)]);
+          if (code && code.length > 4) hi = mid; else lo = mid + 1;
+        } catch (_) { lo = mid + 1; }
+      }
+      cache.deployBlock = hi;
+    }
+    writeFileSync(cacheFile, JSON.stringify(cache));
+    process.stderr.write('  [claimlogs/' + chain.key + '] deploy block: ' + cache.deployBlock + '\n');
+  }
+
+  const scanFrom = Math.max(cache.deployBlock, cache.scannedTo + 1);
+  if (scanFrom > latest) {
+    process.stderr.write('  [claimlogs/' + chain.key + '] up to date (' + Object.keys(cache.recipients).length + ' recipients)\n');
+    return cache.recipients;
+  }
+
+  process.stderr.write('  [claimlogs/' + chain.key + '] scanning ' + scanFrom + '->' + latest + '\n');
+
+  const rewardsTopic = '0x' + strip0x(chain.rewards).padStart(64, '0');
+  const filter = { address: rewardToken, topics: [TOPIC_TRANSFER, rewardsTopic] };
+  const logRpcs = chain.logRpcs || chain.rpcs;
+  const chunk = chain.logChunk || 50000;
+  const ranges = [];
+  for (let f = scanFrom; f <= latest; f += chunk)
+    ranges.push([f, Math.min(f + chunk - 1, latest)]);
+
+  const CONC = chain.concurrency || 4;
+  const recipients = { ...cache.recipients };
+  let done = 0;
+
+  for (let i = 0; i < ranges.length; i += CONC) {
+    const slice = ranges.slice(i, i + CONC);
+    const batch = await Promise.all(slice.map(([f, t]) => getLogsAdaptive(logRpcs, filter, f, t)));
+    for (const logs of batch) {
+      for (const log of logs) {
+        const blk = Number(hexToBig(log.blockNumber));
+        const recip = '0x' + strip0x(log.topics[2]).slice(24).toLowerCase();
+        if (!recipients[recip]) recipients[recip] = { lastBlock: 0, total: '0' };
+        if (blk > recipients[recip].lastBlock) recipients[recip].lastBlock = blk;
+        recipients[recip].total = (BigInt(recipients[recip].total) + hexToBig(log.data)).toString();
+      }
+    }
+    done += slice.length;
+    const lastBlock = slice[slice.length - 1][1];
+    if (done % 4 === 0 || done === ranges.length) {
+      cache.scannedTo = lastBlock;
+      cache.recipients = recipients;
+      writeFileSync(cacheFile, JSON.stringify(cache));
+    }
+  }
+
+  cache.scannedTo = latest;
+  cache.recipients = recipients;
+  writeFileSync(cacheFile, JSON.stringify(cache));
+  process.stderr.write('  [claimlogs/' + chain.key + '] done: ' + Object.keys(recipients).length + ' recipients\n');
+  return recipients;
+}
+
+// piecewise-linear block→timestamp using anchor blocks
+async function buildClaimTimestampMap(chain, recipients) {
+  const addrs = Object.keys(recipients);
+  const blocks = addrs.map(a => recipients[a].lastBlock).filter(b => b > 0);
+  if (!blocks.length) return {};
+  const minBlk = Math.min(...blocks), maxBlk = Math.max(...blocks);
+  const anchorSet = new Set([minBlk, maxBlk]);
+  for (let i = 1; i <= 4; i++) anchorSet.add(Math.floor(minBlk + (maxBlk - minBlk) * i / 5));
+  const anchorList = [...anchorSet].sort((a, b) => a - b);
+  const anchorData = await Promise.all(anchorList.map(async b => {
+    const blk = await rpcCall(chain.rpcs, 'eth_getBlockByNumber', ['0x' + b.toString(16), false]);
+    return { number: Number(hexToBig(blk.number)), timestamp: Number(hexToBig(blk.timestamp)) };
+  }));
+  const tsMap = {};
+  for (const addr of addrs) {
+    const blk = recipients[addr].lastBlock;
+    if (!blk) { tsMap[addr] = null; continue; }
+    if (blk <= anchorData[0].number) { tsMap[addr] = anchorData[0].timestamp; continue; }
+    if (blk >= anchorData[anchorData.length-1].number) { tsMap[addr] = anchorData[anchorData.length-1].timestamp; continue; }
+    for (let i = 0; i < anchorData.length - 1; i++) {
+      const a = anchorData[i], b = anchorData[i+1];
+      if (blk >= a.number && blk <= b.number) {
+        const frac = (blk - a.number) / (b.number - a.number);
+        tsMap[addr] = Math.round(a.timestamp + frac * (b.timestamp - a.timestamp));
+        break;
+      }
+    }
+    if (tsMap[addr] === undefined) tsMap[addr] = anchorData[anchorData.length-1].timestamp;
+  }
+  return tsMap;
+}
+
 // ─── per-user file emission ───────────────────────────────────────────────────
-function emitUsersFile(chain, owedCache, claimedData, decimals, usersIndexFile) {
+function emitUsersFile(chain, owedCache, claimedData, decimals, usersIndexFile, lastClaimTsMap) {
   const DIV = BigInt('1' + '0'.repeat(decimals));
   const rawToNum = wei => {
     if (!wei || wei === '0') return 0;
@@ -599,14 +718,15 @@ function emitUsersFile(chain, owedCache, claimedData, decimals, usersIndexFile) 
     const owed = owedMap[addr] || 0;
     const clm = claimedMap[addr] || 0;
     if (owed <= 0 && clm <= 0) continue;
-    const row = [addr, +owed.toFixed(6), +clm.toFixed(6)];
+    const lastClaimTs = (lastClaimTsMap && lastClaimTsMap[addr] != null) ? lastClaimTsMap[addr] : null;
+    const row = [addr, +owed.toFixed(6), +clm.toFixed(6), lastClaimTs];
     if (lastBlockByAddr[addr]) row.push(lastBlockByAddr[addr]);
     rows.push(row);
   }
   rows.sort((a, b) => b[1] - a[1] || b[2] - a[2]);
 
   const outFile = join(__dir, 'users-' + chain.key + '.json');
-  const outObj = { generatedAt: new Date().toISOString(), chain: chain.key, symbol: 'COMP', users: rows };
+  const outObj = { generatedAt: new Date().toISOString(), lastClaimAddedAt: new Date().toISOString(), chain: chain.key, symbol: 'COMP', users: rows };
   const outStr = JSON.stringify(outObj);
   writeFileSync(outFile, outStr);
 
@@ -716,9 +836,18 @@ async function indexChain(chain, maxBlocks) {
     process.stderr.write('  [claimed] sweep error (non-fatal): ' + e.message + '\n');
   }
 
+  // ── claim log scan for lastClaimTs ──
+  let lastClaimTsMap = {};
+  try {
+    const claimRecipients = await scanClaimLogsForChain(chain, chainToken);
+    lastClaimTsMap = await buildClaimTimestampMap(chain, claimRecipients);
+  } catch (e) {
+    process.stderr.write('  [claimlogs] scan error (non-fatal): ' + e.message + '\n');
+  }
+
   // ── per-user file ──
   try {
-    emitUsersFile(chain, owedCache, claimedData, chainDecimals, usersIndexFile);
+    emitUsersFile(chain, owedCache, claimedData, chainDecimals, usersIndexFile, lastClaimTsMap);
   } catch (e) {
     process.stderr.write('  [users] emit error (non-fatal): ' + e.message + '\n');
   }

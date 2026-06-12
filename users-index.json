@@ -4,42 +4,42 @@
     "owed": 77135.927531,
     "claimed": 401617.693864,
     "file": "users-mainnet.json",
-    "bytes": 1083284
+    "bytes": 1209058
   },
   "base": {
     "users": 40858,
     "owed": 2065.4836,
     "claimed": 16186.961457,
     "file": "users-base.json",
-    "bytes": 2375742
+    "bytes": 2641392
   },
   "polygon": {
     "users": 12958,
     "owed": 1705.845611,
     "claimed": 28798.851505,
     "file": "users-polygon.json",
-    "bytes": 756842
+    "bytes": 860654
   },
   "unichain": {
     "users": 3753,
     "owed": 1067.371545,
     "claimed": 6155.393417,
     "file": "users-unichain.json",
-    "bytes": 219392
+    "bytes": 244323
   },
   "arbitrum": {
     "users": 710,
     "owed": 1484.873688,
     "claimed": 7040.728047,
     "file": "users-arbitrum.json",
-    "bytes": 42187
+    "bytes": 48033
   },
   "optimism": {
     "users": 684,
     "owed": 785.764281,
     "claimed": 3466.125904,
     "file": "users-optimism.json",
-    "bytes": 40172
+    "bytes": 45066
   },
   "linea": {
     "users": 1291,
@@ -53,6 +53,6 @@
     "owed": 1750.982337,
     "claimed": 2106.868031,
     "file": "users-mantle.json",
-    "bytes": 21220
+    "bytes": 24490
   }
 }
