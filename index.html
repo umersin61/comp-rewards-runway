@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>COMP Rewards Runway — Compound v3</title>
+<style>
+:root{--bg:#0b0e14;--panel:#11151f;--panel2:#161b28;--text:#dbe2ef;--mut:#7a8499;--line:#222a3a;
+--ok:#2ecc71;--amber:#f5a623;--red:#ff4d4f;--off:#5c6678;--acc:#00d395}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.wrap{max-width:1080px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:20px;margin:0;color:#fff}h1 .v3{color:var(--acc)}
+.topbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:6px}
+.controls{display:flex;gap:10px;align-items:center;font-size:12px;color:var(--mut)}
+.controls input{width:52px;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:4px 6px;font:inherit}
+button{background:var(--acc);border:0;color:#06281e;font:inherit;font-weight:700;padding:6px 14px;border-radius:6px;cursor:pointer}
+button:hover{filter:brightness(1.1)}
+.sub{color:var(--mut);font-size:12px;margin:2px 0 18px}
+#summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:22px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.tile.bad{border-color:var(--red)}.tile.good{border-color:var(--line)}
+.tl{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px}
+.tv{font-size:17px;margin-top:3px;color:#fff}.tv .unit{font-size:11px;color:var(--mut)}.tv.strong{font-weight:700}
+.card{background:var(--panel);border:1px solid var(--line);border-left-width:4px;border-radius:10px;padding:14px 16px;margin-bottom:16px}
+.card.lv-red{border-left-color:var(--red)}.card.lv-amber{border-left-color:var(--amber)}
+.card.lv-ok{border-left-color:var(--ok)}.card.lv-off{border-left-color:var(--off)}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.cname{font-size:17px;font-weight:700;color:#fff}
+.cid{font-size:11px;color:var(--mut);margin-left:8px;text-decoration:none}
+a{color:#7ab8ff;text-decoration:none}a:hover{text-decoration:underline}
+.badge{font-size:12px;font-weight:800;padding:4px 10px;border-radius:6px;letter-spacing:.3px}
+.b-red{background:#3a1214;color:var(--red);border:1px solid var(--red)}
+.b-amber{background:#33260c;color:var(--amber);border:1px solid var(--amber)}
+.b-ok{background:#0e2b1c;color:var(--ok);border:1px solid #1d5c3d}
+.b-off{background:#1a1f2b;color:var(--off);border:1px solid var(--line)}
+.b-err{background:#3a1214;color:var(--red);border:1px solid var(--red)}
+.status-note{font-size:12px;color:var(--mut);margin:6px 0 12px}
+.lv-red .status-note{color:#ff8d8f}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-bottom:10px}
+.tiles .tile{background:var(--panel2)}
+.claims{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12px;color:var(--mut);background:var(--panel2);border:1px dashed var(--line);border-radius:8px;padding:8px 12px;margin-bottom:12px}
+.claims b{color:var(--text)}
+.claims .drift{color:#c9d4e8;width:100%}
+.claims.err-sm{color:var(--red)}
+.spin{display:inline-block;width:10px;height:10px;border:2px solid var(--mut);border-top-color:transparent;border-radius:50%;animation:r 1s linear infinite;vertical-align:-1px}
+@keyframes r{to{transform:rotate(360deg)}}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:6px 8px;border-bottom:1px solid #1a2030}
+tr:last-child td{border-bottom:0}
+.num{text-align:right}.strong{font-weight:700;color:#fff}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px}
+.dot.on{background:var(--ok)}.dot.gated{background:var(--amber)}.dot.off{background:#39404f}
+.warn-sm{font-size:10px;color:var(--amber);border:1px solid var(--amber);border-radius:4px;padding:0 4px}
+.hint{cursor:help;color:var(--mut);border:1px solid var(--line);border-radius:50%;font-size:10px;padding:0 4px}
+.foot{margin-top:28px;font-size:11.5px;color:var(--mut);border-top:1px solid var(--line);padding-top:14px}
+.foot p{margin:6px 0}
+#updated{color:var(--mut);font-size:12px}
+.tile.alert{border-color:var(--red)}.tv.alert{color:var(--red)}.tv.big{font-size:21px}.tv.dim,.claims.dim{color:var(--mut)}.gross-sm{font-size:10px;color:var(--mut);margin-top:2px}.redtxt{color:var(--red)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div><h1>COMP Rewards Runway <span class="v3">· Compound v3</span></h1></div>
+    <div class="controls">
+      <label>governance lead time <input id="govDays" type="number" min="1" step="0.5" value="8"> days</label>
+      <button id="refresh">refresh</button>
+      <span id="updated"></span>
+    </div>
+  </div>
+  <div class="sub">live from public RPCs in your browser · all v3 comets · no backend, no keys · <a href="users.html">per-user explorer →</a></div>
+  <div id="summary"></div>
+  <div id="cards"></div>
+  <div class="foot">
+    <p><b>how to read this:</b> each chain has one CometRewards contract that every comet on that chain pays claims from. <b>accruing</b> = Σ (baseTrackingSupplySpeed + baseTrackingBorrowSpeed) ÷ 10¹⁵ × 86400 across comets (zeroed where the pool is below <i>baseMinForRewards</i>). <b>gross runway</b> = balance ÷ accrual. <b>effective runway</b> = balance ÷ max(accrual, trailing claim rate) — rewards must be <i>claimed</i>, so already-earned-but-unclaimed COMP is a liability on top of future accrual; the trailing claim rate (COMP actually transferred out of the rewards contract) is our proxy for that backlog being drawn down. When claims exceed accrual, the backlog is draining the balance faster than emissions alone suggest. The true total unclaimed backlog is not readable on-chain without indexing every user, so treat every runway here as an <i>upper bound</i>.</p>
+    <p><b>insolvency:</b> if an indexed unclaimed backlog (<code>unclaimed.json</code>, produced by the companion <code>indexer.mjs</code> which enumerates every historical user and simulates <code>getRewardOwed</code>) exceeds the contract balance, the chain flags red immediately — users' claims revert until a top-up lands, regardless of emission rate.</p><p><b>the red banner:</b> a COMP top-up needs a governance proposal (~2d review + 3d voting + 2d timelock, plus L2 bridging) — call it the governance lead time, configurable above. If a chain's effective runway is shorter than that, no proposal can land before the contract runs dry: rewards keep accruing but claims start reverting. Amber = a proposal must go up now to make it.</p>
+    <p><b>sources:</b> comet & rewards addresses from <a href="https://github.com/compound-finance/comet/tree/main/deployments" target="_blank" rel="noopener">compound-finance/comet</a> deployments. Unofficial community dashboard — verify before acting. Not affiliated with Compound Labs, the DAO, or (especially) Gauntlet.</p>
+  </div>
+</div>
+<script>
+// ===== COMP Rewards Runway — shared data layer (runs in browser and node) =====
+const SEL = {
+  baseTrackingSupplySpeed: '0x189bb2f1',
+  baseTrackingBorrowSpeed: '0x9ea99a5a',
+  totalSupply: '0x18160ddd',
+  totalBorrow: '0x8285ef40',
+  baseMinForRewards: '0x9364e18a',
+  rewardConfig: '0x2289b6b8',
+  balanceOf: '0x70a08231',
+  symbol: '0x95d89b41',
+  decimals: '0x313ce567',
+  aggregate3: '0x82ad56cb',
+};
+const MULTICALL3 = '0xcA11bde05977b3631167028862bE2a173976CA11';
+const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+const TRACKING_SCALE = 1e15; // trackingIndexScale: COMP/sec = speed / 1e15
+const DAY = 86400;
+
+const CHAINS = [
+  { key: 'mainnet', logChunk: 45000, claimsDays: 7, name: 'Ethereum', chainId: 1, blockTime: 12,
+    rpcs: ['https://ethereum-rpc.publicnode.com', 'https://eth.drpc.org', 'https://eth.llamarpc.com'],
+    explorer: 'https://etherscan.io',
+    rewards: '0x1B0e765F6224C21223AeA2af16c1C46E38885a40',
+    comets: [
+      { name: 'USDC',   addr: '0xc3d688B66703497DAA19211EEdff47f25384cdc3' },
+      { name: 'WETH',   addr: '0xA17581A9E3356d9A858b789D68B4d866e593aE94' },
+      { name: 'USDT',   addr: '0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840' },
+      { name: 'wstETH', addr: '0x3D0bb1ccaB520A66e607822fC55BC921738fAFE3' },
+      { name: 'USDS',   addr: '0x5D409e56D886231aDAf00c8775665AD0f9897b56' },
+      { name: 'WBTC',   addr: '0xe85Dc543813B8c2CFEaAc371517b925a166a9293' },
+    ]},
+  { key: 'arbitrum', logRpcs: ['https://arb1.arbitrum.io/rpc'], logChunk: 2600000, claimsDays: 7, name: 'Arbitrum', chainId: 42161, blockTime: 0.25,
+    rpcs: ['https://arbitrum-one-rpc.publicnode.com', 'https://arb1.arbitrum.io/rpc', 'https://arbitrum.drpc.org'],
+    explorer: 'https://arbiscan.io',
+    rewards: '0x88730d254A2f7e6AC8388c3198aFd694bA9f7fae',
+    comets: [
+      { name: 'USDC',   addr: '0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf' },
+      { name: 'USDC.e', addr: '0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA' },
+      { name: 'WETH',   addr: '0x6f7D514bbD4aFf3BcD1140B7344b32f063dEe486' },
+      { name: 'USDT',   addr: '0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07' },
+    ]},
+  { key: 'base', logRpcs: ['https://base.gateway.tenderly.co'], logChunk: 350000, claimsDays: 7, name: 'Base', chainId: 8453, blockTime: 2,
+    rpcs: ['https://base-rpc.publicnode.com', 'https://mainnet.base.org', 'https://base.drpc.org'],
+    explorer: 'https://basescan.org',
+    rewards: '0x123964802e6ABabBE1Bc9547D72Ef1B69B00A6b1',
+    comets: [
+      { name: 'USDC',  addr: '0xb125E6687d4313864e53df431d5425969c15Eb2F' },
+      { name: 'WETH',  addr: '0x46e6b214b524310239732D51387075E0e70970bf' },
+      { name: 'USDbC', addr: '0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf' },
+      { name: 'AERO',  addr: '0x784efeB622244d2348d4F2522f8860B96fbEcE89' },
+      { name: 'USDS',  addr: '0x2c776041CCFe903071AF44aa147368a9c8EEA518' },
+    ]},
+  { key: 'polygon', logRpcs: ['https://polygon.gateway.tenderly.co'], logChunk: 350000, claimsDays: 7, name: 'Polygon', chainId: 137, blockTime: 2.1,
+    rpcs: ['https://polygon-bor-rpc.publicnode.com', 'https://polygon-rpc.com', 'https://polygon.drpc.org'],
+    explorer: 'https://polygonscan.com',
+    rewards: '0x45939657d1CA34A8FA39A924B71D28Fe8431e581',
+    comets: [
+      { name: 'USDC.e', addr: '0xF25212E676D1F7F89Cd72fFEe66158f541246445' },
+      { name: 'USDT',   addr: '0xaeB318360f27748Acb200CE616E389A6C9409a07' },
+    ]},
+  { key: 'optimism', logRpcs: ['https://optimism.gateway.tenderly.co'], logChunk: 350000, claimsDays: 7, name: 'Optimism', chainId: 10, blockTime: 2,
+    rpcs: ['https://optimism-rpc.publicnode.com', 'https://mainnet.optimism.io', 'https://optimism.drpc.org'],
+    explorer: 'https://optimistic.etherscan.io',
+    rewards: '0x443EA0340cb75a160F31A440722dec7b5bc3C2E9',
+    comets: [
+      { name: 'USDC', addr: '0x2e44e174f7D53F0212823acC11C01A11d58c5bCB' },
+      { name: 'USDT', addr: '0x995E394b8B2437aC8Ce61Ee0bC610D617962B214' },
+      { name: 'WETH', addr: '0xE36A30D249f7761327fd973001A32010b521b6Fd' },
+    ]},
+  { key: 'unichain', logRpcs: ['https://unichain.gateway.tenderly.co'], logChunk: 350000, claimsDays: 7, name: 'Unichain', chainId: 130, blockTime: 1,
+    rpcs: ['https://unichain-rpc.publicnode.com', 'https://mainnet.unichain.org', 'https://unichain.drpc.org'],
+    explorer: 'https://uniscan.xyz',
+    rewards: '0x6f7D514bbD4aFf3BcD1140B7344b32f063dEe486',
+    comets: [
+      { name: 'USDC', addr: '0x2c7118c4C88B9841FCF839074c26Ae8f035f2921' },
+      { name: 'WETH', addr: '0x6C987dDE50dB1dcDd32Cd4175778C2a291978E2a' },
+    ]},
+  { key: 'scroll', logChunk: 9900, claimsDays: 2, name: 'Scroll', chainId: 534352, blockTime: 3,
+    rpcs: ['https://scroll-rpc.publicnode.com', 'https://rpc.scroll.io', 'https://scroll.drpc.org'],
+    explorer: 'https://scrollscan.com',
+    rewards: '0x70167D30964cbFDc315ECAe02441Af747bE0c5Ee',
+    comets: [
+      { name: 'USDC', addr: '0xB2f97c1Bd3bf02f5e74d13f02E3e26F93D77CE44' },
+    ]},
+  { key: 'mantle', logRpcs: ['https://mantle.gateway.tenderly.co'], logChunk: 350000, claimsDays: 7, name: 'Mantle', chainId: 5000, blockTime: 2,
+    rpcs: ['https://mantle-rpc.publicnode.com', 'https://rpc.mantle.xyz', 'https://mantle.drpc.org'],
+    explorer: 'https://mantlescan.xyz',
+    rewards: '0xCd83CbBFCE149d141A5171C3D6a0F0fCCeE225Ab',
+    comets: [
+      { name: 'USDe', addr: '0x606174f62cd968d8e684c645080fa694c1D7786E' },
+    ]},
+  { key: 'linea', logRpcs: ['https://rpc.linea.build'], logChunk: 350000, claimsDays: 7, name: 'Linea', chainId: 59144, blockTime: 2,
+    rpcs: ['https://linea-rpc.publicnode.com', 'https://rpc.linea.build', 'https://linea.drpc.org'],
+    explorer: 'https://lineascan.build',
+    rewards: '0x2c7118c4C88B9841FCF839074c26Ae8f035f2921',
+    comets: [
+      { name: 'USDC', addr: '0x8D38A3d6B3c3B7d96D6536DA7Eef94A9d7dbC991' },
+      { name: 'WETH', addr: '0x60F2058379716A64a7A5d29219397e79bC552194' },
+    ]},
+  { key: 'ronin', logRpcs: ['https://api.roninchain.com/rpc','https://ronin.drpc.org'], logChunk: 250000, claimsDays: 7, name: 'Ronin', chainId: 2020, blockTime: 3,
+    rpcs: ['https://api.roninchain.com/rpc', 'https://ronin.drpc.org'],
+    explorer: 'https://app.roninchain.com',
+    rewards: '0x31CdEe8609Bc15fD33cc525f101B70a81b2B1E59',
+    comets: [
+      { name: 'WETH', addr: '0x4006eD4097Ee51c09A04c3B0951D28CCf19e6DFE' },
+      { name: 'WRON', addr: '0xc0Afdbd1cEB621Ef576BA969ce9D4ceF78Dbc0c0' },
+    ]},
+];
+
+// ---------- hex / abi helpers ----------
+const strip0x = (s) => (s.startsWith('0x') ? s.slice(2) : s);
+const pad32 = (h) => strip0x(h).padStart(64, '0');
+const padAddr = (a) => '0'.repeat(24) + strip0x(a).toLowerCase();
+const hexToBig = (h) => BigInt(h === '0x' || !h ? 0 : h);
+const word = (hex, i) => '0x' + strip0x(hex).slice(i * 64, (i + 1) * 64);
+const wordAddr = (hex, i) => '0x' + strip0x(hex).slice(i * 64 + 24, (i + 1) * 64);
+
+// encode aggregate3((address,bool,bytes)[]) — allowFailure=true for all
+function encodeAggregate3(calls) {
+  // calls: [{target, callData}]
+  const n = calls.length;
+  let tuples = [];
+  for (const c of calls) {
+    const data = strip0x(c.callData);
+    const dataLen = data.length / 2;
+    const padded = data.padEnd(Math.ceil(dataLen / 32) * 64, '0');
+    // tuple: address, bool(true), offset to bytes (0x60), then bytes len + data
+    tuples.push(padAddr(c.target) + pad32('1') + pad32('60') + pad32(dataLen.toString(16)) + padded);
+  }
+  // array head: offsets of each tuple relative to start of tuple-offset area
+  let offsets = [], cur = n * 32;
+  for (const t of tuples) { offsets.push(pad32(cur.toString(16))); cur += t.length / 2; }
+  const arrayBody = pad32(n.toString(16)) + offsets.join('') + tuples.join('');
+  return SEL.aggregate3 + pad32('20') + arrayBody;
+}
+
+// decode aggregate3 return -> array of {success, data}
+function decodeAggregate3(hex) {
+  const h = strip0x(hex);
+  const rd = (i) => BigInt('0x' + h.slice(i * 64, (i + 1) * 64));
+  const arrOff = Number(rd(0)) / 32;          // word index of array length
+  const n = Number(rd(arrOff));
+  const base = arrOff + 1;                     // word index where tuple offsets start
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const tupOff = base + Number(rd(base + i)) / 32;
+    const success = rd(tupOff) === 1n;
+    const bytesOff = tupOff + Number(rd(tupOff + 1)) / 32;
+    const len = Number(rd(bytesOff));
+    const data = '0x' + h.slice((bytesOff + 1) * 64, (bytesOff + 1) * 64 + len * 2);
+    out.push({ success, data });
+  }
+  return out;
+}
+
+// ---------- rpc ----------
+async function rpcCall(rpcs, method, params, attempt = 0) {
+  const url = rpcs[attempt % rpcs.length];
+  try {
+    const res = await fetch(url, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
+    });
+    const j = await res.json();
+    if (j.error) throw new Error(j.error.message || 'rpc error');
+    return j.result;
+  } catch (e) {
+    if (attempt + 1 < rpcs.length * 2) return rpcCall(rpcs, method, params, attempt + 1);
+    throw e;
+  }
+}
+const ethCall = (rpcs, to, data) => rpcCall(rpcs, 'eth_call', [{ to, data }, 'latest']);
+const multicall = async (rpcs, calls) =>
+  decodeAggregate3(await ethCall(rpcs, MULTICALL3, encodeAggregate3(calls)));
+
+function decodeSymbol(hex) {
+  const h = strip0x(hex);
+  if (h.length === 64) { // bytes32 symbol (e.g. MKR-style)
+    let s=""; for (let i=0;i<h.length;i+=2){const c=parseInt(h.slice(i,i+2),16); if(c) s+=String.fromCharCode(c);} return s;
+  }
+  const len = parseInt(h.slice(64, 128), 16);
+  let s = '';
+  for (let i = 0; i < len; i++) s += String.fromCharCode(parseInt(h.slice(128 + i * 2, 130 + i * 2), 16));
+  return s;
+}
+
+// ---------- per-chain market data ----------
+async function fetchChainData(chain) {
+  const calls = [];
+  for (const c of chain.comets) {
+    calls.push({ target: c.addr, callData: SEL.baseTrackingSupplySpeed });
+    calls.push({ target: c.addr, callData: SEL.baseTrackingBorrowSpeed });
+    calls.push({ target: c.addr, callData: SEL.totalSupply });
+    calls.push({ target: c.addr, callData: SEL.totalBorrow });
+    calls.push({ target: c.addr, callData: SEL.baseMinForRewards });
+    calls.push({ target: chain.rewards, callData: SEL.rewardConfig + padAddr(c.addr) });
+  }
+  const res = await multicall(chain.rpcs, calls);
+  const comets = chain.comets.map((c, i) => {
+    const b = i * 6;
+    const supplySpeed = hexToBig(res[b].data);
+    const borrowSpeed = hexToBig(res[b + 1].data);
+    const totalSupply = hexToBig(res[b + 2].data);
+    const totalBorrow = hexToBig(res[b + 3].data);
+    const baseMin = hexToBig(res[b + 4].data);
+    const token = res[b + 5].success && strip0x(res[b + 5].data).length >= 64 ? wordAddr(res[b + 5].data, 0) : null;
+    const supplyActive = totalSupply >= baseMin;
+    const borrowActive = totalBorrow >= baseMin;
+    const supplyPerDay = Number(supplySpeed) / TRACKING_SCALE * DAY;
+    const borrowPerDay = Number(borrowSpeed) / TRACKING_SCALE * DAY;
+    return {
+      ...c, token, supplyActive, borrowActive,
+      supplyPerDayCfg: supplyPerDay, borrowPerDayCfg: borrowPerDay,
+      supplyPerDay: supplyActive ? supplyPerDay : 0,
+      borrowPerDay: borrowActive ? borrowPerDay : 0,
+      perDay: (supplyActive ? supplyPerDay : 0) + (borrowActive ? borrowPerDay : 0),
+    };
+  });
+  // reward token (COMP) balance of the rewards contract
+  const tokens = [...new Set(comets.map((c) => c.token).filter(Boolean))];
+  const tcalls = tokens.flatMap((t) => [
+    { target: t, callData: SEL.balanceOf + padAddr(chain.rewards) },
+    { target: t, callData: SEL.symbol },
+    { target: t, callData: SEL.decimals },
+  ]);
+  const tres = await multicall(chain.rpcs, tcalls);
+  const tokenInfo = {};
+  tokens.forEach((t, i) => {
+    const dec = Number(hexToBig(tres[i * 3 + 2].data));
+    tokenInfo[t] = {
+      balance: Number(hexToBig(tres[i * 3].data)) / 10 ** dec,
+      symbol: tres[i * 3 + 1].success ? decodeSymbol(tres[i * 3 + 1].data) : '?',
+      decimals: dec, addr: t,
+    };
+  });
+  const perDay = comets.reduce((s, c) => s + c.perDay, 0);
+  const mainToken = tokens.length ? tokenInfo[tokens[0]] : null;
+  const balance = tokens.reduce((s, t) => s + tokenInfo[t].balance, 0);
+  return {
+    ...chain, comets, tokenInfo, tokens,
+    perDay, balance,
+    symbol: mainToken ? mainToken.symbol : 'COMP',
+    runwayDays: perDay > 0 ? balance / perDay : Infinity,
+  };
+}
+
+// ---------- claims / top-ups via logs ----------
+async function getBlock(rpcs, tag) {
+  const b = await rpcCall(rpcs, 'eth_getBlockByNumber', [tag, false]);
+  return { number: Number(hexToBig(b.number)), timestamp: Number(hexToBig(b.timestamp)) };
+}
+
+// find block ~targetTs via 2-step linear estimate
+async function blockAtTime(rpcs, latest, targetTs, blockTime) {
+  let guess = Math.max(1, latest.number - Math.round((latest.timestamp - targetTs) / blockTime));
+  for (let i = 0; i < 4; i++) {
+    const b = await getBlock(rpcs, '0x' + guess.toString(16));
+    const diff = targetTs - b.timestamp;
+    if (Math.abs(diff) < 1800) return b;
+    const rate = (latest.timestamp - b.timestamp) / Math.max(1, latest.number - b.number);
+    guess = Math.min(latest.number, Math.max(1, guess + Math.round(diff / Math.max(rate, 0.05))));
+  }
+  return await getBlock(rpcs, '0x' + guess.toString(16));
+}
+
+async function getLogsAdaptive(rpcs, filter, fromBlock, toBlock, depth = 0) {
+  try {
+    return await rpcCall(rpcs, 'eth_getLogs', [{ ...filter, fromBlock: '0x' + fromBlock.toString(16), toBlock: '0x' + toBlock.toString(16) }]);
+  } catch (e) {
+    if (depth >= 4 || toBlock - fromBlock < 2000) throw e;
+    const mid = Math.floor((fromBlock + toBlock) / 2);
+    const a = await getLogsAdaptive(rpcs, filter, fromBlock, mid, depth + 1);
+    const b = await getLogsAdaptive(rpcs, filter, mid + 1, toBlock, depth + 1);
+    return a.concat(b);
+  }
+}
+
+// split range into chain-tuned chunks, fetch with limited concurrency
+async function getLogsChunked(chain, filter, fromBlock, toBlock) {
+  const rpcs = chain.logRpcs || chain.rpcs;
+  const chunk = chain.logChunk || 9900;
+  const ranges = [];
+  for (let f = fromBlock; f <= toBlock; f += chunk) ranges.push([f, Math.min(f + chunk - 1, toBlock)]);
+  const out = [];
+  const CONC = 4;
+  for (let i = 0; i < ranges.length; i += CONC) {
+    const batch = await Promise.all(ranges.slice(i, i + CONC).map(([f, t]) => getLogsAdaptive(rpcs, filter, f, t)));
+    for (const b of batch) out.push(...b);
+  }
+  return out;
+}
+
+async function fetchClaims(chain, days) {
+  const token = chain.tokens[0];
+  if (!token) return null;
+  days = days || chain.claimsDays || 7;
+  const rpcs = chain.logRpcs || chain.rpcs;
+  const latest = await getBlock(rpcs, 'latest');
+  const start = await blockAtTime(rpcs, latest, latest.timestamp - days * DAY, chain.blockTime);
+  const spanDays = (latest.timestamp - start.timestamp) / DAY;
+  const rewardsTopic = '0x' + padAddr(chain.rewards);
+  const [outLogs, inLogs] = await Promise.all([
+    getLogsChunked(chain, { address: token, topics: [TRANSFER_TOPIC, rewardsTopic] }, start.number, latest.number),
+    getLogsChunked(chain, { address: token, topics: [TRANSFER_TOPIC, null, rewardsTopic] }, start.number, latest.number),
+  ]);
+  const dec = chain.tokenInfo[token].decimals;
+  const sum = (logs) => logs.reduce((s, l) => s + Number(hexToBig(l.data)) / 10 ** dec, 0);
+  const claimed = sum(outLogs);
+  const topups = inLogs.map((l) => ({ amount: Number(hexToBig(l.data)) / 10 ** dec, block: Number(hexToBig(l.blockNumber)) }));
+  return {
+    spanDays, claimed, claimedPerDay: claimed / spanDays, nClaims: outLogs.length,
+    topupTotal: topups.reduce((s, t) => s + t.amount, 0), topups,
+  };
+}
+
+// ===== UI layer =====
+const state = { chains: {}, claims: {}, errors: {}, backlog: null, loading: true };
+
+function govDays() {
+  const v = parseFloat(document.getElementById('govDays').value);
+  return isFinite(v) && v > 0 ? v : 8;
+}
+
+const fmt = (n, d = 2) => n.toLocaleString('en-US', { maximumFractionDigits: d, minimumFractionDigits: 0 });
+function fmtDays(d) {
+  if (!isFinite(d)) return '∞';
+  if (d > 3650) return '>10y';
+  if (d < 1) return (d * 24).toFixed(1) + 'h';
+  return d.toFixed(1) + 'd';
+}
+
+function backlogFor(key) {
+  const bl = state.backlog && state.backlog.chains && state.backlog.chains[key];
+  return bl && !bl.error ? bl : null;
+}
+
+function chainStatus(c) {
+  const cl = state.claims[c.key];
+  const claimRate = cl ? cl.claimedPerDay : 0;
+  const bl = backlogFor(c.key);
+  const owed = bl && bl.complete ? bl.totalUnclaimed : null;
+  const effBalance = owed !== null ? Math.max(0, c.balance - owed) : c.balance;
+  const drain = Math.max(c.perDay, claimRate);
+  const gross = c.perDay > 0 ? c.balance / c.perDay : Infinity;
+  const eff = drain > 0 ? effBalance / drain : Infinity;
+  const insolvent = owed !== null && owed > c.balance + 0.005;
+  const g = govDays();
+  let level, label, note;
+  if (insolvent) {
+    level = 'red'; label = '🔥 GAUNTLET FUCKED UP';
+    note = 'INSOLVENT: owes ' + fmt(owed) + ' ' + c.symbol + ' of already-earned rewards but holds only ' + fmt(c.balance) +
+      ' — claims are reverting right now' + (c.perDay > 0.001 ? ', while ' + fmt(c.perDay) + '/day keeps accruing on top' : '') +
+      '. Even an instant top-up needs ~' + g + 'd of governance to land.';
+  } else if (drain <= 0.001) {
+    level = 'off'; label = 'EMISSIONS OFF';
+    note = c.balance > 0.5 ? fmt(c.balance) + ' ' + c.symbol + ' idle in rewards contract' : 'no rewards accruing, nothing left to claim';
+  } else if (eff < g) {
+    level = 'red'; label = '🔥 GAUNTLET FUCKED UP';
+    note = 'effective runway ' + fmtDays(eff) + ' < governance lead time (' + g + 'd) — a top-up proposal can no longer land before the rewards contract runs dry' + (c.perDay <= 0.001 ? ' (claim drain of old accruals)' : '');
+  } else if (eff < g + 7) {
+    level = 'amber'; label = '⚠️ TOP-UP NEEDED NOW';
+    note = 'effective runway ' + fmtDays(eff) + ' — a proposal must go up within ' + fmtDays(eff - g) + ' to land in time';
+  } else {
+    level = 'ok'; label = '✓ FUNDED';
+    note = c.perDay <= 0.001 && claimRate > 0 ? 'no emissions; balance only services old unclaimed rewards' : 'runway comfortably exceeds governance lead time';
+  }
+  return { level, label, note, eff, gross, claimRate, drain, owed, insolvent, effBalance, indexed: owed !== null };
+}
+
+function statusRank(c) {
+  const s = chainStatus(c);
+  return { red: 0, amber: 1, ok: 2, off: 3 }[s.level] * 1e9 + (s.insolvent ? -1e8 : 0) + Math.min(s.eff, 1e6);
+}
+
+function renderSummary() {
+  const chains = Object.values(state.chains);
+  const totalPerDay = chains.reduce((s, c) => s + c.perDay, 0);
+  const totalBal = chains.reduce((s, c) => s + c.balance, 0);
+  const reds = chains.filter((c) => chainStatus(c).level === 'red');
+  const idx = chains.map((c) => ({ c, bl: backlogFor(c.key) })).filter((x) => x.bl && x.bl.complete);
+  const totalOwed = idx.reduce((s, x) => s + x.bl.totalUnclaimed, 0);
+  const totalShort = idx.reduce((s, x) => s + Math.max(0, x.bl.totalUnclaimed - x.c.balance), 0);
+  const nMissing = chains.length - idx.length;
+  const live = chains.filter((c) => c.perDay > 0.001);
+  const worst = live.length ? live.reduce((m, c) => (chainStatus(c).eff < chainStatus(m).eff ? c : m)) : null;
+  document.getElementById('summary').innerHTML = `
+    <div class="tile"><div class="tl">accruing, all chains</div><div class="tv">${fmt(totalPerDay)} <span class="unit">COMP/day</span></div></div>
+    <div class="tile"><div class="tl">sitting in rewards contracts</div><div class="tv">${fmt(totalBal)} <span class="unit">COMP</span></div></div>
+    <div class="tile ${totalShort > 0.01 ? 'alert' : ''}"><div class="tl">owed but unclaimed (indexed)</div><div class="tv ${totalShort > 0.01 ? 'alert' : ''}">${idx.length ? fmt(totalOwed) + ' <span class="unit">COMP' + (totalShort > 0.01 ? ' · shortfall ' + fmt(totalShort) : '') + (nMissing ? ' · ' + nMissing + ' chains not indexed' : '') + '</span>' : 'not indexed yet'}</div></div>
+    <div class="tile ${reds.length ? 'alert' : ''}"><div class="tl">chains in the red</div><div class="tv">${reds.length}${reds.length ? ' — ' + reds.map((c) => c.name).join(', ') : ''}</div></div>
+    <div class="tile"><div class="tl">tightest live runway</div><div class="tv">${worst ? worst.name + ' · ' + fmtDays(chainStatus(worst).eff) : '—'}</div></div>`;
+}
+
+function cometRow(chain, c) {
+  const standalone = c.perDay > 0 ? chain.balance / c.perDay : null;
+  const dot = c.perDay > 0 ? '<span class="dot on"></span>' :
+    (c.supplyPerDayCfg + c.borrowPerDayCfg > 0 ? '<span class="dot gated" title="speed set but pool below baseMinForRewards"></span>' : '<span class="dot off"></span>');
+  const gated = (!c.supplyActive && c.supplyPerDayCfg > 0) || (!c.borrowActive && c.borrowPerDayCfg > 0);
+  return `<tr>
+    <td>${dot}<a href="${chain.explorer}/address/${c.addr}" target="_blank" rel="noopener">c${c.name}v3</a>${gated ? ' <span class="warn-sm" title="below baseMinForRewards — not accruing">gated</span>' : ''}</td>
+    <td class="num">${fmt(c.supplyPerDay)}</td>
+    <td class="num">${fmt(c.borrowPerDay)}</td>
+    <td class="num strong">${fmt(c.perDay)}</td>
+    <td class="num">${chain.perDay > 0 ? ((c.perDay / chain.perDay) * 100).toFixed(0) + '%' : '—'}</td>
+    <td class="num">${standalone !== null ? fmtDays(standalone) : '—'}</td>
+  </tr>`;
+}
+
+function claimsHtml(chain) {
+  const cl = state.claims[chain.key];
+  if (state.errors['claims-' + chain.key]) return `<div class="claims err-sm">claims scan failed: ${state.errors['claims-' + chain.key]}</div>`;
+  if (cl === null) return `<div class="claims">no reward token configured in this chain's rewards contract — nothing claimable</div>`;
+  if (!cl) return `<div class="claims pending">scanning claim activity… <span class="spin"></span></div>`;
+  const drift = chain.perDay - cl.claimedPerDay;
+  let driftTxt;
+  if (chain.perDay <= 0.001 && cl.claimedPerDay <= 0.001) driftTxt = 'no accrual, no claims';
+  else if (drift > 0.01) driftTxt = `unclaimed backlog growing ≈ +${fmt(drift)} COMP/day (accruing faster than people claim — real liability exceeds what the balance suggests)`;
+  else if (drift < -0.01) driftTxt = `claims exceed accrual by ${fmt(-drift)} COMP/day — old earned-but-unclaimed rewards being drained from the balance`;
+  else driftTxt = 'claims ≈ accrual';
+  return `<div class="claims">
+    <span><b>last ${cl.spanDays.toFixed(1)}d:</b> ${fmt(cl.claimed)} COMP claimed (${fmt(cl.claimedPerDay)}/day · ${cl.nClaims} txs)</span>
+    <span><b>top-ups in window:</b> ${cl.topupTotal > 0 ? fmt(cl.topupTotal) + ' COMP' : 'none'}</span>
+    <span class="drift">${driftTxt}</span>
+  </div>`;
+}
+
+function backlogHtml(chain) {
+  const bl = backlogFor(chain.key);
+  if (!bl) {
+    return state.backlog
+      ? `<div class="claims dim">unclaimed backlog not indexed for this chain yet — run <code>node indexer.mjs ${chain.key}</code> to enable insolvency detection</div>`
+      : '';
+  }
+  const snap = state.backlog.generatedAt ? new Date(state.backlog.generatedAt).toLocaleDateString() : '?';
+  const short = Math.max(0, bl.totalUnclaimed - chain.balance);
+  const sfTxt = bl.complete
+    ? (short > 0.01 ? ` — <span class="redtxt">shortfall: ${fmt(short)} ${chain.symbol} (claims revert)</span>` : ' — fully covered by balance')
+    : ' (incomplete scan)';
+  return `<div class="claims" style="border-color:#2a3550;background:#0e1420">
+    <span><b>indexed unclaimed backlog:</b> ${fmt(bl.totalUnclaimed)} ${chain.symbol} owed to ${bl.users} users (snapshot ${snap})${sfTxt}</span>
+  </div>`;
+}
+
+function chainCard(chain) {
+  const s = chainStatus(chain);
+  const owedTile = s.indexed
+    ? `<div class="tv big ${s.insolvent ? 'alert' : ''}">${fmt(s.owed)} <span class="unit">${chain.symbol}</span></div>`
+    : `<div class="tv big dim">not indexed</div>`;
+  return `<div class="card lv-${s.level}" id="card-${chain.key}">
+    <div class="card-head">
+      <div><span class="cname">${chain.name}</span> <span class="cid">chain ${chain.chainId}</span>
+        <a class="cid" href="${chain.explorer}/address/${chain.rewards}" target="_blank" rel="noopener">rewards contract ↗</a></div>
+      <div class="badge b-${s.level}">${s.label}</div>
+    </div>
+    <div class="status-note">${s.note}</div>
+    <div class="tiles">
+      <div class="tile"><div class="tl">in rewards contract</div><div class="tv big">${fmt(chain.balance)} <span class="unit">${chain.symbol}</span></div></div>
+      <div class="tile ${s.insolvent ? 'alert' : ''}"><div class="tl">owed but unclaimed <span class="hint" title="already earned by users, not yet claimed — from indexer.mjs snapshot (unclaimed.json)">?</span></div>${owedTile}</div>
+      <div class="tile"><div class="tl">accruing</div><div class="tv">${fmt(chain.perDay)} <span class="unit">${chain.symbol}/day</span></div></div>
+      <div class="tile"><div class="tl">effective runway <span class="hint" title="(balance − indexed backlog) ÷ max(accrual rate, observed claim rate). Without an indexed backlog, balance is used as-is — an upper bound.">?</span></div><div class="tv strong">${fmtDays(s.eff)}</div><div class="gross-sm">gross (ignores backlog): ${fmtDays(s.gross)}</div></div>
+    </div>
+    ${backlogHtml(chain)}
+    ${claimsHtml(chain)}
+    <table>
+      <thead><tr><th>comet</th><th class="num">supply/day</th><th class="num">borrow/day</th><th class="num">total/day</th><th class="num">share</th><th class="num">runway if alone <span class="hint" title="chain balance ÷ this comet's rate">?</span></th></tr></thead>
+      <tbody>${chain.comets.map((c) => cometRow(chain, c)).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
+function errCard(chain, msg) {
+  return `<div class="card lv-off" id="card-${chain.key}">
+    <div class="card-head"><div><span class="cname">${chain.name}</span></div><div class="badge b-err">FETCH FAILED</div></div>
+    <div class="status-note">${msg} — <a href="#" onclick="retryChain('${chain.key}');return false;">retry</a></div>
+  </div>`;
+}
+
+function render() {
+  renderSummary();
+  const ordered = CHAINS.slice().sort((a, b) => {
+    const da = state.chains[a.key], db = state.chains[b.key];
+    if (!da || !db) return da ? -1 : 1;
+    return statusRank(da) - statusRank(db);
+  });
+  document.getElementById('cards').innerHTML = ordered
+    .map((c) => (state.chains[c.key] ? chainCard(state.chains[c.key]) : errCard(c, state.errors[c.key] || 'loading…')))
+    .join('');
+  document.getElementById('updated').textContent = 'updated ' + new Date().toLocaleTimeString();
+}
+
+async function loadChain(chain) {
+  try {
+    const d = await fetchChainData(chain);
+    state.chains[chain.key] = d;
+    delete state.errors[chain.key];
+    render();
+    try {
+      const cl = await fetchClaims(d);
+      state.claims[chain.key] = cl;
+      delete state.errors['claims-' + chain.key];
+    } catch (e) {
+      state.errors['claims-' + chain.key] = String(e.message || e).slice(0, 120);
+    }
+    render();
+  } catch (e) {
+    state.errors[chain.key] = String(e.message || e).slice(0, 160);
+    render();
+  }
+}
+
+function retryChain(key) { loadChain(CHAINS.find((c) => c.key === key)); }
+
+async function loadAll() {
+  state.chains = {}; state.claims = {}; state.errors = {};
+  render();
+  await Promise.all(CHAINS.map(loadChain));
+}
+
+async function loadBacklog() {
+  try {
+    const res = await fetch('unclaimed.json');
+    if (!res.ok) return; // absent — dashboard works without it
+    state.backlog = await res.json();
+    render();
+  } catch (_) { /* no-op */ }
+}
+
+document.getElementById('refresh').addEventListener('click', loadAll);
+document.getElementById('govDays').addEventListener('input', () => {
+  try { localStorage.setItem('govDays', document.getElementById('govDays').value); } catch (_) {}
+  render();
+});
+try { const g = localStorage.getItem('govDays'); if (g) document.getElementById('govDays').value = g; } catch (_) {}
+loadAll();
+loadBacklog();
+</script>
+</body>
+</html>

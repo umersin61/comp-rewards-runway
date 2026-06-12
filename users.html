@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>COMP Rewards — Per-User Explorer</title>
+<style>
+:root{--bg:#0b0e14;--panel:#11151f;--panel2:#161b28;--text:#dbe2ef;--mut:#7a8499;--line:#222a3a;--ok:#2ecc71;--red:#ff4d4f;--acc:#00d395}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.wrap{max-width:1080px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:20px;margin:0 0 4px;color:#fff}h1 .v3{color:var(--acc)}
+a{color:#7ab8ff;text-decoration:none}a:hover{text-decoration:underline}
+.sub{color:var(--mut);font-size:12px;margin:0 0 16px}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.tab{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:12px}
+.tab.active{border-color:var(--acc);color:#fff}
+.tab .m{color:var(--mut);font-size:11px}
+.tab.short{border-left:3px solid var(--red)}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
+input{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:6px 10px;font:inherit;width:340px;max-width:100%}
+button{background:var(--acc);border:0;color:#06281e;font:inherit;font-weight:700;padding:6px 12px;border-radius:6px;cursor:pointer}
+button.sec{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.meta{color:var(--mut);font-size:12px;margin:6px 0 10px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;text-align:right;padding:6px 8px;border-bottom:1px solid var(--line);cursor:pointer;user-select:none;white-space:nowrap}
+th:first-child,th:nth-child(2){text-align:left}
+th.sorted{color:var(--acc)}
+td{padding:5px 8px;border-bottom:1px solid #1a2030;text-align:right;white-space:nowrap}
+td:first-child{color:var(--mut)}td:first-child,td:nth-child(2){text-align:left}
+.owed{color:#ffb86b}.zero{color:var(--mut)}
+.foot{margin-top:22px;font-size:11.5px;color:var(--mut);border-top:1px solid var(--line);padding-top:12px}
+#more{margin:14px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Per-User Rewards <span class="v3">· Compound v3</span></h1>
+  <div class="sub"><a href="index.html">← runway dashboard</a> · every address ever owed or paid COMP rewards · from indexed snapshots (<span id="snap">…</span>)</div>
+  <div class="tabs" id="tabs"></div>
+  <div class="controls">
+    <input id="q" placeholder="filter by address…" autocomplete="off">
+    <button class="sec" id="csv">export CSV</button>
+  </div>
+  <div class="meta" id="meta">loading…</div>
+  <table>
+    <thead><tr id="heads">
+      <th data-k="rank">#</th><th data-k="addr">address</th>
+      <th data-k="1">owed (unclaimed)</th><th data-k="2">claimed (lifetime)</th>
+      <th data-k="3">total earned</th><th data-k="4">claimed %</th><th data-k="5" id="lbHead" style="display:none">last activity</th>
+    </tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <button id="more" class="sec" style="display:none">show 200 more</button>
+  <div class="foot">owed = live <code>getRewardOwed()</code> at snapshot time (grows while emissions run) · claimed = lifetime <code>rewardsClaimed()</code> from the rewards contract · addresses link to the chain explorer. Snapshots regenerate nightly via the repo's GitHub Action. If owed &gt; the chain's rewards-contract balance, those claims revert — see the dashboard for solvency status.</div>
+</div>
+<script>
+const EXPLORERS = {mainnet:'https://etherscan.io',base:'https://basescan.org',polygon:'https://polygonscan.com',unichain:'https://uniscan.xyz',arbitrum:'https://arbiscan.io',optimism:'https://optimistic.etherscan.io',linea:'https://lineascan.build',mantle:'https://mantlescan.xyz'};
+const NAMES = {mainnet:'Ethereum',base:'Base',polygon:'Polygon',unichain:'Unichain',arbitrum:'Arbitrum',optimism:'Optimism',linea:'Linea',mantle:'Mantle'};
+const st = { index:null, chain:null, rows:[], q:'', sortK:1, dir:-1, limit:200, cache:{} };
+const fmt = (n,d=4) => n.toLocaleString('en-US',{maximumFractionDigits:d});
+const el = id => document.getElementById(id);
+
+async function init(){
+  try { st.index = await (await fetch('users-index.json')).json(); }
+  catch(e){ el('meta').textContent = 'could not load users-index.json — host these files together (does not work from file:// — use any static host or python3 -m http.server)'; return; }
+  const keys = Object.keys(st.index).sort((a,b)=>st.index[b].owed-st.index[a].owed);
+  el('tabs').innerHTML = keys.map(k=>`<div class="tab" id="tab-${k}" onclick="pick('${k}')">${NAMES[k]||k} <span class="m">${fmt(st.index[k].owed,0)} owed · ${fmt(st.index[k].users,0)} users</span></div>`).join('');
+  pick(keys[0]);
+}
+async function pick(k){
+  st.chain = k; st.limit = 200;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el('tab-'+k).classList.add('active');
+  el('meta').textContent = 'loading ' + (NAMES[k]||k) + '…';
+  if (!st.cache[k]) st.cache[k] = await (await fetch(st.index[k].file)).json();
+  const d = st.cache[k];
+  el('snap').textContent = new Date(d.generatedAt).toLocaleString();
+  st.rows = d.users.map(u=>[u[0], u[1]||0, u[2]||0, (u[1]||0)+(u[2]||0), (u[1]||0)+(u[2]||0)>0 ? (u[2]||0)/((u[1]||0)+(u[2]||0))*100 : 0, u.length>3?u[3]:null]);
+  el('lbHead').style.display = st.rows.some(r=>r[5]!==null) ? '' : 'none';
+  render();
+}
+function filtered(){
+  const q = st.q.toLowerCase();
+  let r = q ? st.rows.filter(x=>x[0].toLowerCase().includes(q)) : st.rows.slice();
+  r.sort((a,b)=>(a[st.sortK]<b[st.sortK]?1:-1)*(-st.dir));
+  return r;
+}
+function render(){
+  const r = filtered();
+  const tOwed = r.reduce((s,x)=>s+x[1],0), tCl = r.reduce((s,x)=>s+x[2],0);
+  el('meta').textContent = `${NAMES[st.chain]} — ${fmt(r.length,0)} addresses · owed ${fmt(tOwed,2)} COMP · claimed ${fmt(tCl,2)} COMP` + (st.q?` (filtered)`:'');
+  const ex = EXPLORERS[st.chain];
+  const showLb = st.rows.some(x=>x[5]!==null);
+  el('rows').innerHTML = r.slice(0,st.limit).map((x,i)=>`<tr>
+    <td>${i+1}</td>
+    <td><a href="${ex}/address/${x[0]}" target="_blank" rel="noopener">${x[0]}</a></td>
+    <td class="${x[1]>0?'owed':'zero'}">${fmt(x[1])}</td>
+    <td class="${x[2]>0?'':'zero'}">${fmt(x[2])}</td>
+    <td>${fmt(x[3])}</td>
+    <td class="${x[4]<50?'owed':''}">${x[4].toFixed(1)}%</td>
+    ${showLb?`<td>${x[5]!==null?'block '+x[5]:'—'}</td>`:''}
+  </tr>`).join('');
+  el('more').style.display = r.length > st.limit ? '' : 'none';
+  document.querySelectorAll('#heads th').forEach(h=>h.classList.toggle('sorted', h.dataset.k==String(st.sortK)));
+}
+el('q').addEventListener('input', e=>{ st.q = e.target.value.trim(); st.limit = 200; render(); });
+el('more').addEventListener('click', ()=>{ st.limit += 200; render(); });
+document.querySelectorAll('#heads th').forEach(h=>h.addEventListener('click', ()=>{ const k = Number(h.dataset.k); if(!isNaN(k)&&k>=1){ st.dir = st.sortK===k ? -st.dir : -1; st.sortK = k; render(); } }));
+el('csv').addEventListener('click', ()=>{
+  const r = filtered();
+  const csv = 'address,owed_comp,claimed_comp,total_earned,claimed_pct\n' + r.map(x=>`${x[0]},${x[1]},${x[2]},${x[3]},${x[4].toFixed(2)}`).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download = `comp-rewards-${st.chain}.csv`; a.click();
+});
+init();
+</script>
+</body>
+</html>

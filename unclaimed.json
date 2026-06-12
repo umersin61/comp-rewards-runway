@@ -1,0 +1,266 @@
+{
+  "generatedAt": "2026-06-12T17:03:15.581Z",
+  "chains": {
+    "unichain": {
+      "symbol": "COMP",
+      "rewardsBalance": 149.608871,
+      "totalUnclaimed": 1067.371545,
+      "shortfall": 917.762674,
+      "users": 3011,
+      "perComet": {
+        "USDC": {
+          "unclaimed": 140.259019,
+          "users": 2366,
+          "scannedToBlock": 50514875
+        },
+        "WETH": {
+          "unclaimed": 927.1125259999999,
+          "users": 895,
+          "scannedToBlock": 50514875
+        }
+      },
+      "scannedToBlock": 50516096,
+      "complete": true,
+      "name": "Unichain"
+    },
+    "scroll": {
+      "symbol": "COMP",
+      "rewardsBalance": 0,
+      "totalUnclaimed": 0,
+      "shortfall": 0,
+      "users": 0,
+      "perComet": {
+        "USDC": {
+          "unclaimed": 0,
+          "users": 0,
+          "scannedToBlock": 34061749
+        }
+      },
+      "scannedToBlock": 34061780,
+      "complete": true,
+      "name": "Scroll"
+    },
+    "linea": {
+      "symbol": "COMP",
+      "rewardsBalance": 860.067289,
+      "totalUnclaimed": 411.55725900000004,
+      "shortfall": 0,
+      "users": 859,
+      "perComet": {
+        "USDC": {
+          "unclaimed": 206.134696,
+          "users": 778,
+          "scannedToBlock": 31007519
+        },
+        "WETH": {
+          "unclaimed": 205.422563,
+          "users": 93,
+          "scannedToBlock": 31007519
+        }
+      },
+      "scannedToBlock": 31007677,
+      "complete": true,
+      "name": "Linea"
+    },
+    "ronin": {
+      "symbol": "COMP",
+      "rewardsBalance": 0,
+      "totalUnclaimed": 0,
+      "shortfall": 0,
+      "users": 0,
+      "perComet": {
+        "WETH": {
+          "unclaimed": 0,
+          "users": 0,
+          "note": "no reward token configured (address(0))"
+        },
+        "WRON": {
+          "unclaimed": 0,
+          "users": 0,
+          "note": "no reward token configured (address(0))"
+        }
+      },
+      "scannedToBlock": 56907503,
+      "complete": true,
+      "note": "all comets: rewardConfig.token=address(0), no rewards configured",
+      "name": "Ronin"
+    },
+    "mainnet": {
+      "symbol": "COMP",
+      "rewardsBalance": 0.018083017,
+      "totalUnclaimed": 77135.927531,
+      "shortfall": 77135.909447983,
+      "users": 14637,
+      "perComet": {
+        "USDC": {
+          "unclaimed": 47540.789990000005,
+          "users": 8799,
+          "scannedToBlock": 25301448
+        },
+        "WETH": {
+          "unclaimed": 7605.282143,
+          "users": 3866,
+          "scannedToBlock": 25301484
+        },
+        "USDT": {
+          "unclaimed": 20814.246817,
+          "users": 2796,
+          "scannedToBlock": 25301540
+        },
+        "wstETH": {
+          "unclaimed": 105.77061900000001,
+          "users": 55,
+          "scannedToBlock": 25301506
+        },
+        "USDS": {
+          "unclaimed": 975.626487,
+          "users": 242,
+          "scannedToBlock": 25301544
+        },
+        "WBTC": {
+          "unclaimed": 94.21147500000001,
+          "users": 151,
+          "scannedToBlock": 25301544
+        }
+      },
+      "scannedToBlock": 25301547,
+      "complete": true,
+      "name": "Ethereum"
+    },
+    "arbitrum": {
+      "symbol": "COMP",
+      "rewardsBalance": 47.14433699999999,
+      "totalUnclaimed": 1484.873688,
+      "shortfall": 1437.729351,
+      "users": 456,
+      "perComet": {
+        "USDC": {
+          "unclaimed": 791.7435449999999,
+          "users": 287,
+          "scannedToBlock": 472728743
+        },
+        "USDC.e": {
+          "unclaimed": 0,
+          "users": 0,
+          "scannedToBlock": 472728743
+        },
+        "WETH": {
+          "unclaimed": 139.727237,
+          "users": 77,
+          "scannedToBlock": 472729053
+        },
+        "USDT": {
+          "unclaimed": 553.402906,
+          "users": 132,
+          "scannedToBlock": 472729053
+        }
+      },
+      "scannedToBlock": 472729053,
+      "complete": true,
+      "name": "Arbitrum"
+    },
+    "base": {
+      "symbol": "COMP",
+      "rewardsBalance": 149.786027,
+      "totalUnclaimed": 2065.4836,
+      "shortfall": 1915.697573,
+      "users": 32019,
+      "perComet": {
+        "USDC": {
+          "unclaimed": 1899.815427,
+          "users": 20391,
+          "scannedToBlock": 47242903
+        },
+        "WETH": {
+          "unclaimed": 69.861866,
+          "users": 11862,
+          "scannedToBlock": 47241719
+        },
+        "USDbC": {
+          "unclaimed": 5.16962,
+          "users": 162,
+          "scannedToBlock": 47242088
+        },
+        "AERO": {
+          "unclaimed": 52.257763000000004,
+          "users": 67,
+          "scannedToBlock": 47242114
+        },
+        "USDS": {
+          "unclaimed": 38.378924,
+          "users": 15,
+          "scannedToBlock": 47242114
+        }
+      },
+      "scannedToBlock": 47242903,
+      "complete": true,
+      "name": "Base"
+    },
+    "optimism": {
+      "symbol": "COMP",
+      "rewardsBalance": 467.095979,
+      "totalUnclaimed": 785.764281,
+      "shortfall": 318.668302,
+      "users": 505,
+      "perComet": {
+        "USDC": {
+          "unclaimed": 159.90957899999998,
+          "users": 258,
+          "scannedToBlock": 152838211
+        },
+        "USDT": {
+          "unclaimed": 464.654443,
+          "users": 68,
+          "scannedToBlock": 152838211
+        },
+        "WETH": {
+          "unclaimed": 161.200259,
+          "users": 216,
+          "scannedToBlock": 152838211
+        }
+      },
+      "scannedToBlock": 152838211,
+      "complete": true,
+      "name": "Optimism"
+    },
+    "polygon": {
+      "symbol": "COMP",
+      "rewardsBalance": 550.7044728826751,
+      "totalUnclaimed": 1705.845611,
+      "shortfall": 1155.1411381173248,
+      "users": 7293,
+      "perComet": {
+        "USDC.e": {
+          "unclaimed": 1386.3057219999998,
+          "users": 6249,
+          "scannedToBlock": 88381225
+        },
+        "USDT": {
+          "unclaimed": 319.539889,
+          "users": 1119,
+          "scannedToBlock": 88381180
+        }
+      },
+      "scannedToBlock": 88381250,
+      "complete": true,
+      "name": "Polygon"
+    },
+    "mantle": {
+      "symbol": "COMP",
+      "rewardsBalance": 1493.131969,
+      "totalUnclaimed": 1750.982337,
+      "shortfall": 257.8503679999999,
+      "users": 173,
+      "perComet": {
+        "USDe": {
+          "unclaimed": 1750.982337,
+          "users": 173,
+          "scannedToBlock": 96573314
+        }
+      },
+      "scannedToBlock": 96573330,
+      "complete": true,
+      "name": "Mantle"
+    }
+  }
+}
