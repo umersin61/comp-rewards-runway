@@ -62,7 +62,7 @@ const fmt = (n,d=4) => n.toLocaleString('en-US',{maximumFractionDigits:d});
 const el = id => document.getElementById(id);
 
 async function init(){
-  try { st.index = await (await fetch('users-index.json')).json(); }
+  try { st.index = await (await fetch('users-index.json?b=' + Math.floor(Date.now()/300000))).json(); }
   catch(e){ el('meta').textContent = 'could not load users-index.json — host these files together (does not work from file:// — use any static host or python3 -m http.server)'; return; }
   const keys = Object.keys(st.index).sort((a,b)=>st.index[b].owed-st.index[a].owed);
   el('tabs').innerHTML = keys.map(k=>`<div class="tab" id="tab-${k}" onclick="pick('${k}')">${NAMES[k]||k} <span class="m">${fmt(st.index[k].owed,0)} owed · ${fmt(st.index[k].users,0)} users</span></div>`).join('');
@@ -73,7 +73,7 @@ async function pick(k){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   el('tab-'+k).classList.add('active');
   el('meta').textContent = 'loading ' + (NAMES[k]||k) + '…';
-  if (!st.cache[k]) st.cache[k] = await (await fetch(st.index[k].file)).json();
+  if (!st.cache[k]) st.cache[k] = await (await fetch(st.index[k].file + '?b=' + Math.floor(Date.now()/300000))).json();
   const d = st.cache[k];
   el('snap').textContent = new Date(d.generatedAt).toLocaleString();
   st.rows = d.users.map(u=>[u[0], u[1]||0, u[2]||0, (u[1]||0)+(u[2]||0), (u[1]||0)+(u[2]||0)>0 ? (u[2]||0)/((u[1]||0)+(u[2]||0))*100 : 0, u.length>3?u[3]:null]);

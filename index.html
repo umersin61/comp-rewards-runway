@@ -600,7 +600,7 @@ async function loadAll() {
 
 async function loadBacklog() {
   try {
-    const res = await fetch('unclaimed.json');
+    const res = await fetch('unclaimed.json?b=' + Math.floor(Date.now()/300000));
     if (!res.ok) return; // absent — dashboard works without it
     state.backlog = await res.json();
     render();
