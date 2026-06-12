@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>COMP Rewards — Reward Transactions</title>
+<style>
+:root{--bg:#0b0e14;--panel:#11151f;--panel2:#161b28;--text:#dbe2ef;--mut:#7a8499;--line:#222a3a;--ok:#2ecc71;--amber:#f5a623;--red:#ff4d4f;--acc:#00d395}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.wrap{max-width:1120px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:20px;margin:0 0 10px;color:#fff}h1 .v3{color:var(--acc)}
+a{color:#7ab8ff;text-decoration:none}a:hover{text-decoration:underline}
+.nav{display:flex;gap:8px;margin:0 0 14px}
+.navtab{padding:7px 18px;border:1px solid var(--line);border-radius:8px;color:var(--text);font-weight:700;font-size:13px}
+.navtab.active{border-color:var(--acc);color:var(--acc)}
+.navtab:hover{text-decoration:none;border-color:var(--acc)}
+.sub{color:var(--mut);font-size:12px;margin:0 0 14px}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px;font-size:12px;color:var(--mut)}
+select,input{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:6px;padding:5px 8px;font:inherit}
+.meta{color:var(--mut);font-size:12px;margin:4px 0 10px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{font-size:10.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;text-align:right;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+th:nth-child(1),th:nth-child(2),th:nth-child(3),th:nth-child(4){text-align:left}
+td{padding:5px 8px;border-bottom:1px solid #1a2030;text-align:right;white-space:nowrap}
+td:nth-child(1),td:nth-child(2),td:nth-child(3),td:nth-child(4){text-align:left}
+.t-claim{color:#ffb86b}.t-top{color:var(--ok)}
+.low{color:var(--red);font-weight:700}
+.foot{margin-top:22px;font-size:11.5px;color:var(--mut);border-top:1px solid var(--line);padding-top:12px}
+#more{margin:14px 0;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer;font:inherit}
+.spin{display:inline-block;width:9px;height:9px;border:2px solid var(--mut);border-top-color:transparent;border-radius:50%;animation:r 1s linear infinite;vertical-align:-1px}
+@keyframes r{to{transform:rotate(360deg)}}
+.err{color:var(--red)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>COMP Rewards <span class="v3">· Compound v3</span></h1>
+  <div class="nav">
+    <a class="navtab" href="index.html">overview</a>
+    <a class="navtab" href="users.html">users</a>
+    <a class="navtab active" href="claims.html">reward transactions</a>
+  </div>
+  <div class="sub">every claim and top-up on the rewards contracts, live from public RPCs · balance walked back from the current contract balance</div>
+  <div class="controls">
+    <label>window <select id="win"><option value="7">7 days</option><option value="14" selected>14 days</option><option value="30">30 days</option></select></label>
+    <label>chain <select id="chainSel"><option value="all">all</option></select></label>
+    <label><input type="checkbox" id="showTop" checked> show top-ups</label>
+    <span id="status"></span>
+  </div>
+  <div class="meta" id="meta"></div>
+  <table>
+    <thead><tr><th>time (UTC)</th><th>chain</th><th>type</th><th>address</th><th>amount</th><th>contract balance after</th><th>owed by contract then (est.)</th><th>tx</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <button id="more" style="display:none">show 200 more</button>
+  <div class="foot"><b>how to read this:</b> claims pull COMP out of each chain's rewards contract; top-ups (governance) put it in. <i>balance after</i> is exact within the window: it's walked backwards from the live contract balance through every in/out event. <i>owed then</i> is the total earned-but-unclaimed backlog at that moment, estimated from the latest indexed snapshot adjusted for interim claims and accrual — claims larger than the remaining balance revert. Red balances mean the contract was nearly drained. Timestamps interpolated between block anchors (±minutes).</div>
+</div>
+<script>
+const SELX = { balanceOf:'0x70a08231', agg3:'0x82ad56cb', sSpeed:'0x189bb2f1', bSpeed:'0x9ea99a5a', tSup:'0x18160ddd', tBor:'0x8285ef40', bMin:'0x9364e18a' };
+const TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+const META = {
+ mainnet:{name:'Ethereum',bt:12,rpcs:['https://ethereum-rpc.publicnode.com','https://eth.drpc.org'],logRpcs:['https://ethereum-rpc.publicnode.com'],logChunk:45000,explorer:'https://etherscan.io',rewards:'0x1B0e765F6224C21223AeA2af16c1C46E38885a40',token:'0xc00e94Cb662C3520282E6f5717214004A7f26888',comets:[['USDC','0xc3d688B66703497DAA19211EEdff47f25384cdc3'],['WETH','0xA17581A9E3356d9A858b789D68B4d866e593aE94'],['USDT','0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840'],['wstETH','0x3D0bb1ccaB520A66e607822fC55BC921738fAFE3'],['USDS','0x5D409e56D886231aDAf00c8775665AD0f9897b56'],['WBTC','0xe85Dc543813B8c2CFEaAc371517b925a166a9293']]},
+ arbitrum:{name:'Arbitrum',bt:0.25,rpcs:['https://arbitrum-one-rpc.publicnode.com','https://arb1.arbitrum.io/rpc'],logRpcs:['https://arb1.arbitrum.io/rpc'],logChunk:2600000,explorer:'https://arbiscan.io',rewards:'0x88730d254A2f7e6AC8388c3198aFd694bA9f7fae',token:'0x354A6dA3fcde098F8389cad84b0182725c6C91dE',comets:[['USDC','0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf'],['USDC.e','0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA'],['WETH','0x6f7D514bbD4aFf3BcD1140B7344b32f063dEe486'],['USDT','0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07']]},
+ base:{name:'Base',bt:2,rpcs:['https://base-rpc.publicnode.com','https://mainnet.base.org'],logRpcs:['https://base.gateway.tenderly.co'],logChunk:350000,explorer:'https://basescan.org',rewards:'0x123964802e6ABabBE1Bc9547D72Ef1B69B00A6b1',token:'0x9e1028F5F1D5eDE59748FFceE5532509976840E0',comets:[['USDC','0xb125E6687d4313864e53df431d5425969c15Eb2F'],['WETH','0x46e6b214b524310239732D51387075E0e70970bf'],['USDbC','0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf'],['AERO','0x784efeB622244d2348d4F2522f8860B96fbEcE89'],['USDS','0x2c776041CCFe903071AF44aa147368a9c8EEA518']]},
+ polygon:{name:'Polygon',bt:2.1,rpcs:['https://polygon-bor-rpc.publicnode.com','https://polygon.gateway.tenderly.co'],logRpcs:['https://polygon.gateway.tenderly.co'],logChunk:350000,explorer:'https://polygonscan.com',rewards:'0x45939657d1CA34A8FA39A924B71D28Fe8431e581',token:'0x8505b9d2254A7Ae468c0E9dd10Ccea3A837aef5c',comets:[['USDC.e','0xF25212E676D1F7F89Cd72fFEe66158f541246445'],['USDT','0xaeB318360f27748Acb200CE616E389A6C9409a07']]},
+ optimism:{name:'Optimism',bt:2,rpcs:['https://optimism-rpc.publicnode.com','https://optimism.gateway.tenderly.co'],logRpcs:['https://optimism.gateway.tenderly.co'],logChunk:350000,explorer:'https://optimistic.etherscan.io',rewards:'0x443EA0340cb75a160F31A440722dec7b5bc3C2E9',token:'0x7e7d4467112689329F7e06571eD0E8CbAd4910eE',comets:[['USDC','0x2e44e174f7D53F0212823acC11C01A11d58c5bCB'],['USDT','0x995E394b8B2437aC8Ce61Ee0bC610D617962B214'],['WETH','0xE36A30D249f7761327fd973001A32010b521b6Fd']]},
+ unichain:{name:'Unichain',bt:1,rpcs:['https://unichain-rpc.publicnode.com','https://mainnet.unichain.org'],logRpcs:['https://unichain.gateway.tenderly.co'],logChunk:350000,explorer:'https://uniscan.xyz',rewards:'0x6f7D514bbD4aFf3BcD1140B7344b32f063dEe486',token:'0xdf78e4F0A8279942ca68046476919A90F2288656',comets:[['USDC','0x2c7118c4C88B9841FCF839074c26Ae8f035f2921'],['WETH','0x6C987dDE50dB1dcDd32Cd4175778C2a291978E2a']]},
+ linea:{name:'Linea',bt:2,rpcs:['https://linea-rpc.publicnode.com','https://rpc.linea.build'],logRpcs:['https://rpc.linea.build'],logChunk:350000,explorer:'https://lineascan.build',rewards:'0x2c7118c4C88B9841FCF839074c26Ae8f035f2921',token:'0x0EcE76334fB560F2B1a49a60E38Cf726B02203F0',comets:[['USDC','0x8D38A3d6B3c3B7d96D6536DA7Eef94A9d7dbC991'],['WETH','0x60F2058379716A64a7A5d29219397e79bC552194']]},
+ mantle:{name:'Mantle',bt:2,rpcs:['https://mantle-rpc.publicnode.com','https://mantle.gateway.tenderly.co'],logRpcs:['https://mantle.gateway.tenderly.co'],logChunk:350000,explorer:'https://mantlescan.xyz',rewards:'0xCd83CbBFCE149d141A5171C3D6a0F0fCCeE225Ab',token:'0x52b7d8851d6CCBC6342ba0855Be65F7B82A3F17f',comets:[['USDe','0x606174f62cd968d8e684c645080fa694c1D7786E']]}
+};
+const sx = s => s.startsWith('0x') ? s.slice(2) : s;
+const p32 = h => sx(h).padStart(64,'0');
+const pA = a => '0'.repeat(24) + sx(a).toLowerCase();
+const fmt = (n,d=2) => n.toLocaleString('en-US',{maximumFractionDigits:d});
+function encAgg3(calls){
+  const n = calls.length; let tuples = [];
+  for (const c of calls){ const d = sx(c.callData); const L = d.length/2;
+    tuples.push(pA(c.target) + p32('1') + p32('60') + p32(L.toString(16)) + d.padEnd(Math.ceil(L/32)*64,'0')); }
+  let offs = [], cur = n*32;
+  for (const t of tuples){ offs.push(p32(cur.toString(16))); cur += t.length/2; }
+  return SELX.agg3 + p32('20') + p32(n.toString(16)) + offs.join('') + tuples.join('');
+}
+function decAgg3(hex){
+  const h = sx(hex); const rd = i => BigInt('0x'+h.slice(i*64,(i+1)*64));
+  const ao = Number(rd(0))/32, n = Number(rd(ao)), base = ao+1, out = [];
+  for (let i=0;i<n;i++){ const to = base + Number(rd(base+i))/32;
+    const ok = rd(to)===1n; const bo = to + Number(rd(to+1))/32; const len = Number(rd(bo));
+    out.push({ok, data:'0x'+h.slice((bo+1)*64,(bo+1)*64+len*2)}); }
+  return out;
+}
+async function rpcc(rpcs, method, params, attempt=0){
+  const url = rpcs[attempt % rpcs.length];
+  try{
+    const j = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params})}).then(r=>r.json());
+    if (j.error) throw new Error(j.error.message || 'rpc error');
+    return j.result;
+  }catch(e){ if (attempt+1 < rpcs.length*2) return rpcc(rpcs, method, params, attempt+1); throw e; }
+}
+const call = (rpcs, to, data) => rpcc(rpcs, 'eth_call', [{to, data}, 'latest']);
+async function getBlock(rpcs, tag){
+  const b = await rpcc(rpcs, 'eth_getBlockByNumber', [typeof tag === 'number' ? '0x'+tag.toString(16) : tag, false]);
+  return { n: parseInt(b.number,16), ts: parseInt(b.timestamp,16) };
+}
+async function getLogsChunked(m, filter, from, to){
+  const out = [];
+  const ranges = [];
+  for (let f = from; f <= to; f += m.logChunk) ranges.push([f, Math.min(f + m.logChunk - 1, to)]);
+  for (let i = 0; i < ranges.length; i += 4){
+    const batch = await Promise.all(ranges.slice(i,i+4).map(([f,t]) =>
+      rpcc(m.logRpcs, 'eth_getLogs', [{...filter, fromBlock:'0x'+f.toString(16), toBlock:'0x'+t.toString(16)}])));
+    for (const b of batch) out.push(...b);
+  }
+  return out;
+}
+const st = { events: [], owed: {}, owedAt: null, loaded: {}, errors: {}, limit: 200 };
+async function loadOwed(){
+  try{
+    const d = await fetch('unclaimed.json?b=' + Math.floor(Date.now()/300000)).then(r=>r.json());
+    st.owedAt = new Date(d.generatedAt).getTime()/1000;
+    for (const [k,v] of Object.entries(d.chains)) if (v.complete) st.owed[k] = v.totalUnclaimed;
+  }catch(_){}
+}
+async function loadChain(key, days){
+  const m = META[key];
+  try{
+    const latest = await getBlock(m.rpcs, 'latest');
+    let guess = Math.max(1, latest.n - Math.round(days*86400/m.bt));
+    let gb = await getBlock(m.rpcs, guess);
+    if (Math.abs((latest.ts - days*86400) - gb.ts) > 3600 && latest.n !== gb.n){
+      const rate = (latest.ts - gb.ts) / (latest.n - gb.n);
+      guess = Math.max(1, latest.n - Math.round(days*86400/rate));
+      gb = await getBlock(m.rpcs, guess);
+    }
+    const [outs, ins, mc] = await Promise.all([
+      getLogsChunked(m, {address:m.token, topics:[TRANSFER, pA('0x'+sx(m.rewards)).replace(/^/, '0x')]}, gb.n, latest.n),
+      getLogsChunked(m, {address:m.token, topics:[TRANSFER, null, '0x'+pA(m.rewards)]}, gb.n, latest.n),
+      call(m.rpcs, '0xcA11bde05977b3631167028862bE2a173976CA11', encAgg3(
+        m.comets.flatMap(([n,c])=>[{target:c,callData:SELX.sSpeed},{target:c,callData:SELX.bSpeed},{target:c,callData:SELX.tSup},{target:c,callData:SELX.tBor},{target:c,callData:SELX.bMin}])
+        .concat([{target:m.token, callData:SELX.balanceOf + pA(m.rewards)}])))
+    ]);
+    const res = decAgg3(mc);
+    let perDay = 0;
+    m.comets.forEach((c,i)=>{
+      const b = i*5;
+      const sS = Number(BigInt(res[b].data||'0x0')), bS = Number(BigInt(res[b+1].data||'0x0'));
+      const tS = BigInt(res[b+2].data||'0x0'), tB = BigInt(res[b+3].data||'0x0'), mn = BigInt(res[b+4].data||'0x0');
+      if (tS >= mn) perDay += sS/1e15*86400;
+      if (tB >= mn) perDay += bS/1e15*86400;
+    });
+    const balNow = Number(BigInt(res[res.length-1].data))/1e18;
+    const interp = bn => gb.n === latest.n ? latest.ts : Math.round(gb.ts + (bn - gb.n)*(latest.ts - gb.ts)/(latest.n - gb.n));
+    const evs = [];
+    for (const l of outs) evs.push({chain:key, type:'claim', bn:parseInt(l.blockNumber,16), li:parseInt(l.logIndex,16), addr:'0x'+l.topics[2].slice(26), amt:Number(BigInt(l.data))/1e18, tx:l.transactionHash});
+    for (const l of ins) evs.push({chain:key, type:'top-up', bn:parseInt(l.blockNumber,16), li:parseInt(l.logIndex,16), addr:'0x'+l.topics[1].slice(26), amt:Number(BigInt(l.data))/1e18, tx:l.transactionHash});
+    evs.sort((a,b)=> b.bn - a.bn || b.li - a.li); // newest first
+    let bal = balNow, claimsAfter = 0;
+    const nowTs = latest.ts;
+    for (const e of evs){
+      e.ts = interp(e.bn);
+      e.balAfter = bal;
+      if (e.type === 'claim'){
+        const owedNow = st.owed[key];
+        e.owedThen = owedNow !== undefined ? Math.max(0, owedNow - perDay*(nowTs - e.ts)/86400 + claimsAfter) : null;
+        claimsAfter += e.amt;
+        bal = bal + e.amt;        // balance before this claim
+      } else {
+        e.owedThen = null;
+        bal = Math.max(0, bal - e.amt); // balance before this top-up
+      }
+    }
+    st.loaded[key] = { n: evs.length, perDay, balNow };
+    st.events = st.events.filter(e => e.chain !== key).concat(evs);
+    render();
+  }catch(e){
+    st.errors[key] = String(e.message||e).slice(0,80);
+    render();
+  }
+}
+function render(){
+  const sel = document.getElementById('chainSel').value;
+  const showTop = document.getElementById('showTop').checked;
+  let r = st.events.filter(e => (sel==='all'||e.chain===sel) && (showTop || e.type==='claim'));
+  r.sort((a,b)=> b.ts - a.ts || b.bn - a.bn);
+  const loaded = Object.keys(st.loaded).length, total = Object.keys(META).length;
+  const errs = Object.entries(st.errors).map(([k,v])=>k+': '+v).join(' · ');
+  document.getElementById('status').innerHTML = loaded < total ? `loading ${loaded}/${total} chains… <span class="spin"></span>` : `${total} chains loaded`;
+  document.getElementById('meta').innerHTML =
+    `${fmt(r.filter(e=>e.type==='claim').length,0)} claims · ${fmt(r.filter(e=>e.type==='top-up').length,0)} top-ups · ` +
+    `claimed ${fmt(r.filter(e=>e.type==='claim').reduce((s,e)=>s+e.amt,0))} COMP · topped up ${fmt(r.filter(e=>e.type==='top-up').reduce((s,e)=>s+e.amt,0))} COMP in window` +
+    (errs ? ` · <span class="err">${errs}</span>` : '');
+  document.getElementById('rows').innerHTML = r.slice(0, st.limit).map(e=>{
+    const m = META[e.chain];
+    const d = new Date(e.ts*1000).toISOString().slice(0,16).replace('T',' ');
+    return `<tr>
+      <td>${d}</td>
+      <td>${m.name}</td>
+      <td class="${e.type==='claim'?'t-claim':'t-top'}">${e.type}</td>
+      <td><a href="${m.explorer}/address/${e.addr}" target="_blank" rel="noopener">${e.addr.slice(0,10)}…${e.addr.slice(-4)}</a></td>
+      <td class="${e.type==='claim'?'t-claim':'t-top'}">${e.type==='claim'?'−':'+'}${fmt(e.amt)}</td>
+      <td class="${e.balAfter < 10 ? 'low' : ''}">${fmt(e.balAfter)}</td>
+      <td>${e.owedThen !== null ? fmt(e.owedThen,0) : '—'}</td>
+      <td><a href="${m.explorer}/tx/${e.tx}" target="_blank" rel="noopener">${e.tx.slice(0,10)}…</a></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('more').style.display = r.length > st.limit ? '' : 'none';
+}
+async function loadAll(){
+  st.events = []; st.loaded = {}; st.errors = {}; st.limit = 200;
+  render();
+  const days = parseInt(document.getElementById('win').value);
+  await loadOwed();
+  await Promise.all(Object.keys(META).map(k => loadChain(k, days)));
+}
+const cs = document.getElementById('chainSel');
+for (const [k,m] of Object.entries(META)) { const o = document.createElement('option'); o.value = k; o.textContent = m.name; cs.appendChild(o); }
+document.getElementById('win').addEventListener('change', loadAll);
+cs.addEventListener('change', render);
+document.getElementById('showTop').addEventListener('change', render);
+document.getElementById('more').addEventListener('click', ()=>{ st.limit += 200; render(); });
+loadAll();
+</script>
+</body>
+</html>

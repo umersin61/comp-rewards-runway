@@ -39,12 +39,17 @@ tr.det>td{background:#0e1420;padding:10px 14px;text-align:left}
 .ct td:first-child,.ct th:first-child{text-align:left}
 .ok2{color:var(--ok)}.bad2{color:var(--red)}.dim2{color:var(--mut)}
 .spin{display:inline-block;width:9px;height:9px;border:2px solid var(--mut);border-top-color:transparent;border-radius:50%;animation:r 1s linear infinite;vertical-align:-1px}@keyframes r{to{transform:rotate(360deg)}}
+.nav{display:flex;gap:8px;margin:0 0 14px}
+.navtab{padding:7px 18px;border:1px solid var(--line);border-radius:8px;color:var(--text);font-weight:700;font-size:13px;text-decoration:none}
+.navtab.active{border-color:var(--acc);color:var(--acc)}
+.navtab:hover{text-decoration:none;border-color:var(--acc)}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Per-User Rewards <span class="v3">· Compound v3</span></h1>
-  <div class="sub"><a href="index.html">← runway dashboard</a> · every address ever owed or paid COMP rewards · from indexed snapshots (<span id="snap">…</span>)</div>
+  <div class="nav"><a class="navtab" href="index.html">overview</a><a class="navtab active" href="users.html">users</a><a class="navtab" href="claims.html">reward transactions</a></div>
+  <div class="sub">every address ever owed or paid COMP rewards · from indexed snapshots (<span id="snap">…</span>)</div>
   <div class="tabs" id="tabs"></div>
   <div class="controls">
     <input id="q" placeholder="filter by address…" autocomplete="off">

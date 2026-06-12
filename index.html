@@ -58,6 +58,10 @@ tr:last-child td{border-bottom:0}
 .foot p{margin:6px 0}
 #updated{color:var(--mut);font-size:12px}
 .tile.alert{border-color:var(--red)}.tv.alert{color:var(--red)}.tv.big{font-size:21px}.tv.dim,.claims.dim{color:var(--mut)}.gross-sm{font-size:10px;color:var(--mut);margin-top:2px}.redtxt{color:var(--red)}
+.nav{display:flex;gap:8px;margin:0 0 14px}
+.navtab{padding:7px 18px;border:1px solid var(--line);border-radius:8px;color:var(--text);font-weight:700;font-size:13px;text-decoration:none}
+.navtab.active{border-color:var(--acc);color:var(--acc)}
+.navtab:hover{text-decoration:none;border-color:var(--acc)}
 </style>
 </head>
 <body>
@@ -70,7 +74,8 @@ tr:last-child td{border-bottom:0}
       <span id="updated"></span>
     </div>
   </div>
-  <div class="sub">live from public RPCs in your browser · all v3 comets · no backend, no keys · <a href="users.html">per-user explorer →</a></div>
+  <div class="nav"><a class="navtab active" href="index.html">overview</a><a class="navtab" href="users.html">users</a><a class="navtab" href="claims.html">reward transactions</a></div>
+  <div class="sub">live from public RPCs in your browser · all v3 comets · no backend, no keys</div>
   <div id="summary"></div>
   <div id="cards"></div>
   <div class="foot">
