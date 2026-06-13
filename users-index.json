@@ -1,10 +1,10 @@
 {
   "mainnet": {
-    "users": 18398,
-    "owed": 77135.927531,
-    "claimed": 401617.693864,
+    "users": 19284,
+    "owed": 76608.788006,
+    "claimed": 411644.995272,
     "file": "users-mainnet.json",
-    "bytes": 1209058
+    "bytes": 1440262
   },
   "base": {
     "users": 40858,
@@ -22,10 +22,10 @@
   },
   "unichain": {
     "users": 3753,
-    "owed": 1067.371545,
-    "claimed": 6155.393417,
+    "owed": 1067.369192,
+    "claimed": 6155.393482,
     "file": "users-unichain.json",
-    "bytes": 244323
+    "bytes": 278099
   },
   "arbitrum": {
     "users": 710,
@@ -35,18 +35,18 @@
     "bytes": 48033
   },
   "optimism": {
-    "users": 684,
-    "owed": 785.764281,
-    "claimed": 3466.125904,
+    "users": 22354,
+    "owed": 2536.148176,
+    "claimed": 13184.223252,
     "file": "users-optimism.json",
-    "bytes": 45066
+    "bytes": 1663859
   },
   "linea": {
     "users": 1291,
     "owed": 411.557259,
     "claimed": 4249.932711,
     "file": "users-linea.json",
-    "bytes": 75866
+    "bytes": 97430
   },
   "mantle": {
     "users": 358,
@@ -54,5 +54,12 @@
     "claimed": 2106.868031,
     "file": "users-mantle.json",
     "bytes": 24490
+  },
+  "scroll": {
+    "users": 0,
+    "owed": 0,
+    "claimed": 0,
+    "file": "users-scroll.json",
+    "bytes": 132
   }
 }
