@@ -434,7 +434,7 @@ function chainStatus(c) {
   const g = govDays();
   let level, label, note;
   if (insolvent) {
-    level = 'red'; label = c.balance < 1 ? 'INSOLVENT — CLAIMS REVERT' : 'INSOLVENT';
+    level = 'red'; label = 'INSOLVENT — CLAIMS REVERT';
     note = 'INSOLVENT: owes ' + fmt(owed) + ' ' + c.symbol + ' of already-earned rewards but holds only ' + fmt(c.balance) +
       ' — cannot pay everyone: claims above the remaining balance revert (first come, first served)' + (c.perDay > 0.001 ? ', while ' + fmt(c.perDay) + '/day keeps accruing on top' : '') +
       '. Even an instant top-up needs ~' + g + 'd of governance to land.';
@@ -474,8 +474,7 @@ function renderSummary() {
     <div class="tile"><div class="tl">accruing, all chains</div><div class="tv">${fmt(totalPerDay)} <span class="unit">COMP/day</span></div></div>
     <div class="tile"><div class="tl">sitting in rewards contracts</div><div class="tv">${fmt(totalBal)} <span class="unit">COMP</span></div></div>
     <div class="tile ${totalShort > 0.01 ? 'alert' : ''}"><div class="tl">owed but unclaimed (indexed)</div><div class="tv ${totalShort > 0.01 ? 'alert' : ''}">${idx.length ? fmt(totalOwed) + ' <span class="unit">COMP' + (totalShort > 0.01 ? ' · shortfall ' + fmt(totalShort) : '') + (nMissing ? ' · ' + nMissing + ' chains not indexed' : '') + '</span>' : 'not indexed yet'}</div></div>
-    <div class="tile ${reds.length ? 'alert' : ''}"><div class="tl">chains in the red</div><div class="tv">${reds.length}${reds.length ? ' — ' + reds.map((c) => c.name).join(', ') : ''}</div></div>
-    <div class="tile"><div class="tl">tightest live runway</div><div class="tv">${worst ? worst.name + ' · ' + fmtDays(chainStatus(worst).eff) : '—'}</div></div>`;
+    <div class="tile ${reds.length ? 'alert' : ''}"><div class="tl">chains in the red</div><div class="tv">${reds.length}${reds.length ? ' — ' + reds.map((c) => c.name).join(', ') : ''}</div></div>`;
 }
 
 function cometRow(chain, c) {
