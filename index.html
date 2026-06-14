@@ -81,7 +81,7 @@ tr:last-child td{border-bottom:0}
   <div class="foot">
     <p><b>how to read this:</b> each chain has one CometRewards contract that every comet on that chain pays claims from. <b>accruing</b> = Σ (baseTrackingSupplySpeed + baseTrackingBorrowSpeed) ÷ 10¹⁵ × 86400 across comets (zeroed where the pool is below <i>baseMinForRewards</i>). <b>gross runway</b> = balance ÷ accrual. <b>effective runway</b> = balance ÷ max(accrual, trailing claim rate) — rewards must be <i>claimed</i>, so already-earned-but-unclaimed COMP is a liability on top of future accrual; the trailing claim rate (COMP actually transferred out of the rewards contract) is our proxy for that backlog being drawn down. When claims exceed accrual, the backlog is draining the balance faster than emissions alone suggest. The true total unclaimed backlog is not readable on-chain without indexing every user, so treat every runway here as an <i>upper bound</i>.</p>
     <p><b>insolvency:</b> if an indexed unclaimed backlog (<code>unclaimed.json</code>, produced by the companion <code>indexer.mjs</code> which enumerates every historical user and simulates <code>getRewardOwed</code>) exceeds the contract balance, the chain flags red immediately — claims above the remaining balance revert until a top-up lands, regardless of emission rate.</p><p><b>the red banner:</b> a COMP top-up needs a governance proposal (~2d review + 3d voting + 2d timelock, plus L2 bridging) — call it the governance lead time, configurable above. If a chain's effective runway is shorter than that, no proposal can land before the contract runs dry: rewards keep accruing but claims start reverting. Amber = a proposal must go up now to make it.</p>
-    <p><b>sources:</b> comet & rewards addresses from <a href="https://github.com/compound-finance/comet/tree/main/deployments" target="_blank" rel="noopener">compound-finance/comet</a> deployments. Unofficial community dashboard — verify before acting. Not affiliated with Compound Labs, the DAO, or (especially) Gauntlet.</p>
+    <p><b>sources:</b> comet & rewards addresses from <a href="https://github.com/compound-finance/comet/tree/main/deployments" target="_blank" rel="noopener">compound-finance/comet</a> deployments. Unofficial community dashboard — verify before acting. Not affiliated with Compound Labs, the DAO, or any service provider.</p>
   </div>
 </div>
 <script>
@@ -434,7 +434,7 @@ function chainStatus(c) {
   const g = govDays();
   let level, label, note;
   if (insolvent) {
-    level = 'red'; label = '🔥 GAUNTLET FUCKED UP';
+    level = 'red'; label = 'INSOLVENT — CLAIMS REVERT';
     note = 'INSOLVENT: owes ' + fmt(owed) + ' ' + c.symbol + ' of already-earned rewards but holds only ' + fmt(c.balance) +
       ' — cannot pay everyone: claims above the remaining balance revert (first come, first served)' + (c.perDay > 0.001 ? ', while ' + fmt(c.perDay) + '/day keeps accruing on top' : '') +
       '. Even an instant top-up needs ~' + g + 'd of governance to land.';
@@ -442,7 +442,7 @@ function chainStatus(c) {
     level = 'off'; label = 'EMISSIONS OFF';
     note = c.balance > 0.5 ? fmt(c.balance) + ' ' + c.symbol + ' idle in rewards contract' : 'no rewards accruing, nothing left to claim';
   } else if (eff < g) {
-    level = 'red'; label = '🔥 GAUNTLET FUCKED UP';
+    level = 'red'; label = "UNDERFUNDED — TOP-UP CAN'T LAND IN TIME";
     note = 'effective runway ' + fmtDays(eff) + ' < governance lead time (' + g + 'd) — a top-up proposal can no longer land before the rewards contract runs dry' + (c.perDay <= 0.001 ? ' (claim drain of old accruals)' : '');
   } else if (eff < g + 7) {
     level = 'amber'; label = '⚠️ TOP-UP NEEDED NOW';
