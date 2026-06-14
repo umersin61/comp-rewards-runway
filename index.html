@@ -434,7 +434,7 @@ function chainStatus(c) {
   const g = govDays();
   let level, label, note;
   if (insolvent) {
-    level = 'red'; label = 'INSOLVENT — CLAIMS REVERT';
+    level = 'red'; label = c.balance < 1 ? 'INSOLVENT — CLAIMS REVERT' : 'INSOLVENT';
     note = 'INSOLVENT: owes ' + fmt(owed) + ' ' + c.symbol + ' of already-earned rewards but holds only ' + fmt(c.balance) +
       ' — cannot pay everyone: claims above the remaining balance revert (first come, first served)' + (c.perDay > 0.001 ? ', while ' + fmt(c.perDay) + '/day keeps accruing on top' : '') +
       '. Even an instant top-up needs ~' + g + 'd of governance to land.';
