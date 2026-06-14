@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-06-13T07:51:38.862Z",
+  "generatedAt": "2026-06-14T08:04:17.413Z",
   "chains": {
     "unichain": {
       "symbol": "COMP",
-      "rewardsBalance": 149.606518,
+      "rewardsBalance": 149.5302,
       "totalUnclaimed": 1067.3691919999999,
-      "shortfall": 917.7626739999998,
+      "shortfall": 917.8389919999998,
       "users": 3009,
       "perComet": {
         "USDC": {
@@ -19,7 +19,7 @@
           "scannedToBlock": 50587470
         }
       },
-      "scannedToBlock": 50587470,
+      "scannedToBlock": 50675869,
       "complete": true,
       "name": "Unichain"
     },
@@ -36,7 +36,7 @@
           "scannedToBlock": 34068613
         }
       },
-      "scannedToBlock": 34068613,
+      "scannedToBlock": 34076759,
       "complete": true,
       "name": "Scroll"
     },
@@ -58,7 +58,7 @@
           "scannedToBlock": 31017140
         }
       },
-      "scannedToBlock": 31017140,
+      "scannedToBlock": 31027688,
       "complete": true,
       "name": "Linea"
     },
@@ -80,16 +80,16 @@
           "note": "no reward token configured (address(0))"
         }
       },
-      "scannedToBlock": 56934155,
+      "scannedToBlock": 56977735,
       "complete": true,
       "note": "all comets: rewardConfig.token=address(0), no rewards configured",
       "name": "Ronin"
     },
     "mainnet": {
       "symbol": "COMP",
-      "rewardsBalance": 0.018089017,
+      "rewardsBalance": 0.010332017,
       "totalUnclaimed": 76608.788006,
-      "shortfall": 76608.769916983,
+      "shortfall": 76608.777673983,
       "users": 15370,
       "perComet": {
         "USDC": {
@@ -123,7 +123,7 @@
           "scannedToBlock": 25306958
         }
       },
-      "scannedToBlock": 25306958,
+      "scannedToBlock": 25314386,
       "complete": true,
       "name": "Ethereum"
     },
@@ -219,7 +219,7 @@
           "scannedToBlock": 152868301
         }
       },
-      "scannedToBlock": 152868301,
+      "scannedToBlock": 152912724,
       "complete": true,
       "name": "Optimism"
     },
