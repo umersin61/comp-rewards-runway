@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-06-14T08:04:17.413Z",
+  "generatedAt": "2026-06-15T09:45:51.955Z",
   "chains": {
     "unichain": {
       "symbol": "COMP",
-      "rewardsBalance": 149.5302,
+      "rewardsBalance": 148.8495,
       "totalUnclaimed": 1067.3691919999999,
-      "shortfall": 917.8389919999998,
+      "shortfall": 918.5196919999998,
       "users": 3009,
       "perComet": {
         "USDC": {
@@ -19,7 +19,7 @@
           "scannedToBlock": 50587470
         }
       },
-      "scannedToBlock": 50675869,
+      "scannedToBlock": 50768281,
       "complete": true,
       "name": "Unichain"
     },
@@ -33,10 +33,10 @@
         "USDC": {
           "unclaimed": 0,
           "users": 0,
-          "scannedToBlock": 34068613
+          "scannedToBlock": 34085907
         }
       },
-      "scannedToBlock": 34076759,
+      "scannedToBlock": 34085907,
       "complete": true,
       "name": "Scroll"
     },
@@ -58,7 +58,7 @@
           "scannedToBlock": 31017140
         }
       },
-      "scannedToBlock": 31027688,
+      "scannedToBlock": 31039788,
       "complete": true,
       "name": "Linea"
     },
@@ -80,16 +80,16 @@
           "note": "no reward token configured (address(0))"
         }
       },
-      "scannedToBlock": 56977735,
+      "scannedToBlock": 57023982,
       "complete": true,
       "note": "all comets: rewardConfig.token=address(0), no rewards configured",
       "name": "Ronin"
     },
     "mainnet": {
       "symbol": "COMP",
-      "rewardsBalance": 0.010332017,
+      "rewardsBalance": 0.717741017,
       "totalUnclaimed": 76608.788006,
-      "shortfall": 76608.777673983,
+      "shortfall": 76608.070264983,
       "users": 15370,
       "perComet": {
         "USDC": {
@@ -123,7 +123,7 @@
           "scannedToBlock": 25306958
         }
       },
-      "scannedToBlock": 25314386,
+      "scannedToBlock": 25322052,
       "complete": true,
       "name": "Ethereum"
     },
@@ -198,9 +198,9 @@
     },
     "optimism": {
       "symbol": "COMP",
-      "rewardsBalance": 450.776748,
+      "rewardsBalance": 0.104115,
       "totalUnclaimed": 2536.148176,
-      "shortfall": 2085.3714280000004,
+      "shortfall": 2536.044061,
       "users": 18772,
       "perComet": {
         "USDC": {
@@ -219,7 +219,7 @@
           "scannedToBlock": 152868301
         }
       },
-      "scannedToBlock": 152912724,
+      "scannedToBlock": 152958930,
       "complete": true,
       "name": "Optimism"
     },
@@ -247,18 +247,18 @@
     },
     "mantle": {
       "symbol": "COMP",
-      "rewardsBalance": 1493.131969,
-      "totalUnclaimed": 1750.982337,
+      "rewardsBalance": 1492.470426,
+      "totalUnclaimed": 1750.320794,
       "shortfall": 257.8503679999999,
-      "users": 173,
+      "users": 172,
       "perComet": {
         "USDe": {
-          "unclaimed": 1750.982337,
-          "users": 173,
-          "scannedToBlock": 96573314
+          "unclaimed": 1750.320794,
+          "users": 172,
+          "scannedToBlock": 96693166
         }
       },
-      "scannedToBlock": 96573330,
+      "scannedToBlock": 96693166,
       "complete": true,
       "name": "Mantle"
     }
