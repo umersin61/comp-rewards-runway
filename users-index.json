@@ -1,10 +1,10 @@
 {
   "mainnet": {
-    "users": 19284,
-    "owed": 76608.788006,
-    "claimed": 411644.995272,
+    "users": 19289,
+    "owed": 64222.898437,
+    "claimed": 424644.983816,
     "file": "users-mainnet.json",
-    "bytes": 1440352
+    "bytes": 1440814
   },
   "base": {
     "users": 40858,
@@ -22,10 +22,10 @@
   },
   "unichain": {
     "users": 3753,
-    "owed": 1067.369192,
-    "claimed": 6155.393482,
+    "owed": 919.263196,
+    "claimed": 6303.499478,
     "file": "users-unichain.json",
-    "bytes": 278105
+    "bytes": 278081
   },
   "arbitrum": {
     "users": 710,
@@ -36,10 +36,10 @@
   },
   "optimism": {
     "users": 22354,
-    "owed": 2536.148176,
-    "claimed": 13184.223252,
+    "owed": 1499.400585,
+    "claimed": 14220.970843,
     "file": "users-optimism.json",
-    "bytes": 1663895
+    "bytes": 1663903
   },
   "linea": {
     "users": 1291,

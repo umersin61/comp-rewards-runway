@@ -1,25 +1,25 @@
 {
-  "generatedAt": "2026-06-16T07:37:30.609Z",
+  "generatedAt": "2026-06-16T09:11:10.210Z",
   "chains": {
     "unichain": {
       "symbol": "COMP",
-      "rewardsBalance": 148.8495,
-      "totalUnclaimed": 1067.3691919999999,
-      "shortfall": 918.5196919999998,
-      "users": 3009,
+      "rewardsBalance": 1.500522,
+      "totalUnclaimed": 919.263196,
+      "shortfall": 917.762674,
+      "users": 3003,
       "perComet": {
         "USDC": {
-          "unclaimed": 140.256666,
-          "users": 2364,
+          "unclaimed": 79.377403,
+          "users": 2361,
           "scannedToBlock": 50587470
         },
         "WETH": {
-          "unclaimed": 927.1125259999999,
-          "users": 895,
+          "unclaimed": 839.885793,
+          "users": 892,
           "scannedToBlock": 50587470
         }
       },
-      "scannedToBlock": 50847085,
+      "scannedToBlock": 50852263,
       "complete": true,
       "name": "Unichain"
     },
@@ -36,7 +36,7 @@
           "scannedToBlock": 34096243
         }
       },
-      "scannedToBlock": 34096243,
+      "scannedToBlock": 34097180,
       "complete": true,
       "name": "Scroll"
     },
@@ -58,7 +58,7 @@
           "scannedToBlock": 31017140
         }
       },
-      "scannedToBlock": 31050325,
+      "scannedToBlock": 31051089,
       "complete": true,
       "name": "Linea"
     },
@@ -80,7 +80,7 @@
           "note": "no reward token configured (address(0))"
         }
       },
-      "scannedToBlock": 57063330,
+      "scannedToBlock": 57066139,
       "complete": true,
       "note": "all comets: rewardConfig.token=address(0), no rewards configured",
       "name": "Ronin"
@@ -88,23 +88,23 @@
     "mainnet": {
       "symbol": "COMP",
       "rewardsBalance": 0.029545017,
-      "totalUnclaimed": 76608.788006,
-      "shortfall": 76608.75846098301,
-      "users": 15370,
+      "totalUnclaimed": 64222.898437,
+      "shortfall": 64222.868891983,
+      "users": 15365,
       "perComet": {
         "USDC": {
-          "unclaimed": 46839.279765,
-          "users": 8804,
+          "unclaimed": 38617.13051,
+          "users": 8802,
           "scannedToBlock": 25306958
         },
         "WETH": {
-          "unclaimed": 7005.304443,
-          "users": 4360,
+          "unclaimed": 4669.554926,
+          "users": 4357,
           "scannedToBlock": 25306958
         },
         "USDT": {
-          "unclaimed": 20898.237914999998,
-          "users": 2847,
+          "unclaimed": 19070.247118,
+          "users": 2844,
           "scannedToBlock": 25306958
         },
         "wstETH": {
@@ -123,7 +123,7 @@
           "scannedToBlock": 25306958
         }
       },
-      "scannedToBlock": 25328602,
+      "scannedToBlock": 25329006,
       "complete": true,
       "name": "Ethereum"
     },
@@ -198,28 +198,28 @@
     },
     "optimism": {
       "symbol": "COMP",
-      "rewardsBalance": 383.76475,
-      "totalUnclaimed": 2536.148176,
-      "shortfall": 2152.3834260000003,
-      "users": 18772,
+      "rewardsBalance": 0.029157,
+      "totalUnclaimed": 1499.4005849999999,
+      "shortfall": 1499.371428,
+      "users": 18764,
       "perComet": {
         "USDC": {
-          "unclaimed": 830.119998,
-          "users": 9324,
+          "unclaimed": 504.352668,
+          "users": 9317,
           "scannedToBlock": 152868301
         },
         "USDT": {
-          "unclaimed": 1182.412104,
-          "users": 1494,
+          "unclaimed": 607.4557060000001,
+          "users": 1491,
           "scannedToBlock": 152868301
         },
         "WETH": {
-          "unclaimed": 523.616074,
-          "users": 9975,
+          "unclaimed": 387.59221099999996,
+          "users": 9973,
           "scannedToBlock": 152868301
         }
       },
-      "scannedToBlock": 152998333,
+      "scannedToBlock": 153000868,
       "complete": true,
       "name": "Optimism"
     },
@@ -258,7 +258,7 @@
           "scannedToBlock": 96693166
         }
       },
-      "scannedToBlock": 96732567,
+      "scannedToBlock": 96735370,
       "complete": true,
       "name": "Mantle"
     }
