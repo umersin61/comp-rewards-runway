@@ -1,6 +1,17 @@
 // indexer.mjs — Compound v3 unclaimed COMP rewards batch indexer
-// Usage: node indexer.mjs [chainKey ...] [--max-blocks N]
+// Usage: node indexer.mjs [chainKey ...] [--max-blocks N] [--no-refresh]
 // Zero deps beyond js-sha3 (already installed in same dir)
+//
+// REFRESH MODE (default ON):
+//   Live values — getRewardOwed ("owed") and rewardsClaimed ("claimed") — accrue/change
+//   continuously, so they MUST be recomputed every run. By default the indexer deletes the
+//   per-chain owed cache (cache/<chain>-owed.json) and claimed cache (cache/<chain>-claimed.json)
+//   at the start of indexChain so both recompute fully from the (cached) address set.
+//   The EXPENSIVE incremental caches are NEVER touched by refresh:
+//     - address enumeration:  cache/<chain>-<comet>.json    (kept — addresses persist)
+//     - claim-log history:     cache/<chain>-claimlogs.json  (kept — incremental scan continues)
+//   Opt out with `--no-refresh` or env KEEP_OWED_CACHE=1 to resume a manually-interrupted long
+//   first index (keeps the owed/claimed caches so within-run queryIdx checkpoints survive).
 //
 // MAINNET TENDERLY PROBE RESULTS (2026-06-12):
 //   mainnet.gateway.tenderly.co works for up to ~200k block ranges reliably (500k times out).
@@ -9,7 +20,7 @@
 //   getLogsAdaptive auto-splits on "too many results" errors — handles result-count caps.
 
 import { createRequire } from 'module';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -741,11 +752,22 @@ function emitUsersFile(chain, owedCache, claimedData, decimals, usersIndexFile, 
 }
 
 // ─── per-chain orchestration ──────────────────────────────────────────────────
-async function indexChain(chain, maxBlocks) {
+async function indexChain(chain, maxBlocks, refreshOwed) {
   process.stderr.write('\n=== ' + chain.name + ' (' + chain.key + ') ===\n');
   const t0 = Date.now();
 
   const owedCacheFile = join(CACHE_DIR, chain.key + '-owed.json');
+  const claimedCacheFile0 = join(CACHE_DIR, chain.key + '-claimed.json');
+  // REFRESH: drop the live-value caches so owed + claimed recompute fully this run.
+  // Address-enumeration caches (cache/<chain>-<comet>.json) and the claim-log cache
+  // (cache/<chain>-claimlogs.json) are intentionally NOT touched — they stay incremental.
+  if (refreshOwed) {
+    for (const f of [owedCacheFile, claimedCacheFile0]) {
+      if (existsSync(f)) { try { unlinkSync(f); process.stderr.write('  [refresh] cleared ' + f.split(/[\\/]/).pop() + '\n'); } catch (_) {} }
+    }
+  } else {
+    process.stderr.write('  [refresh] DISABLED (--no-refresh/KEEP_OWED_CACHE=1) — reusing owed/claimed caches\n');
+  }
   let owedCache = cacheRead(owedCacheFile) || {};
 
   const latestBlock = parseInt(await rpcCall(chain.rpcs, 'eth_blockNumber', []), 16);
@@ -870,9 +892,13 @@ async function indexChain(chain, maxBlocks) {
 // ─── CLI ──────────────────────────────────────────────────────────────────────
 const args = process.argv.slice(2);
 let maxBlocks = null;
+// Refresh defaults ON; opt out via --no-refresh flag or KEEP_OWED_CACHE=1 env.
+let refreshOwed = process.env.KEEP_OWED_CACHE === '1' ? false : true;
 const chainKeys = [];
 for (let i = 0; i < args.length; i++) {
   if (args[i] === '--max-blocks') maxBlocks = parseInt(args[++i]);
+  else if (args[i] === '--no-refresh') refreshOwed = false;
+  else if (args[i] === '--refresh') refreshOwed = true;
   else chainKeys.push(args[i]);
 }
 
@@ -882,7 +908,7 @@ if (!targetChains.length) {
   process.exit(1);
 }
 
-process.stderr.write('Indexing: ' + targetChains.map(c => c.key).join(', ') + (maxBlocks ? ' (max-blocks=' + maxBlocks + ')' : '') + '\n');
+process.stderr.write('Indexing: ' + targetChains.map(c => c.key).join(', ') + (maxBlocks ? ' (max-blocks=' + maxBlocks + ')' : '') + ' refresh=' + (refreshOwed ? 'ON' : 'OFF') + '\n');
 
 const outFile = join(__dir, 'unclaimed.json');
 const output = { generatedAt: new Date().toISOString(), chains: {} };
@@ -895,7 +921,7 @@ function saveOutput() {
 
 for (const chain of targetChains) {
   try {
-    const result = await indexChain(chain, maxBlocks);
+    const result = await indexChain(chain, maxBlocks, refreshOwed);
     output.chains[chain.key] = { ...result, name: chain.name };
   } catch (e) {
     process.stderr.write('ERROR ' + chain.key + ': ' + e.message + '\n');
