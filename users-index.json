@@ -4,7 +4,7 @@
     "owed": 76608.788006,
     "claimed": 411644.995272,
     "file": "users-mainnet.json",
-    "bytes": 1440304
+    "bytes": 1440352
   },
   "base": {
     "users": 40858,
@@ -39,7 +39,7 @@
     "owed": 2536.148176,
     "claimed": 13184.223252,
     "file": "users-optimism.json",
-    "bytes": 1663883
+    "bytes": 1663895
   },
   "linea": {
     "users": 1291,
