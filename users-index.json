@@ -1,10 +1,10 @@
 {
   "mainnet": {
     "users": 19291,
-    "owed": 36968.50047,
+    "owed": 37039.46523,
     "claimed": 452394.870373,
     "file": "users-mainnet.json",
-    "bytes": 1441595
+    "bytes": 1441528
   },
   "base": {
     "users": 40858,
@@ -36,10 +36,10 @@
   },
   "optimism": {
     "users": 22354,
-    "owed": 1499.373486,
-    "claimed": 14220.997942,
+    "owed": 1499.371643,
+    "claimed": 14220.999785,
     "file": "users-optimism.json",
-    "bytes": 1663896
+    "bytes": 1663902
   },
   "linea": {
     "users": 1291,
