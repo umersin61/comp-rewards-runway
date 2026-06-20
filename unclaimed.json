@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-20T14:40:29.399Z",
+  "generatedAt": "2026-06-20T20:00:31.001Z",
   "chains": {
     "unichain": {
       "symbol": "COMP",
@@ -19,7 +19,7 @@
           "scannedToBlock": 50946888
         }
       },
-      "scannedToBlock": 51217556,
+      "scannedToBlock": 51236989,
       "complete": true,
       "name": "Unichain"
     },
@@ -33,10 +33,10 @@
         "USDC": {
           "unclaimed": 0,
           "users": 0,
-          "scannedToBlock": 34128216
+          "scannedToBlock": 34139132
         }
       },
-      "scannedToBlock": 34137096,
+      "scannedToBlock": 34139132,
       "complete": true,
       "name": "Scroll"
     },
@@ -58,7 +58,7 @@
           "scannedToBlock": 31017140
         }
       },
-      "scannedToBlock": 31102412,
+      "scannedToBlock": 31105028,
       "complete": true,
       "name": "Linea"
     },
@@ -80,7 +80,7 @@
           "note": "no reward token configured (address(0))"
         }
       },
-      "scannedToBlock": 57248820,
+      "scannedToBlock": 57258420,
       "complete": true,
       "note": "all comets: rewardConfig.token=address(0), no rewards configured",
       "name": "Ronin"
@@ -88,22 +88,22 @@
     "mainnet": {
       "symbol": "COMP",
       "rewardsBalance": 0.022473017,
-      "totalUnclaimed": 37314.873671,
-      "shortfall": 37314.851197983,
+      "totalUnclaimed": 37359.858887,
+      "shortfall": 37359.836413983,
       "users": 15328,
       "perComet": {
         "USDC": {
-          "unclaimed": 20136.202623999998,
+          "unclaimed": 20161.031487999997,
           "users": 8772,
           "scannedToBlock": 25306958
         },
         "WETH": {
-          "unclaimed": 3036.962423,
+          "unclaimed": 3043.765477,
           "users": 4349,
           "scannedToBlock": 25306958
         },
         "USDT": {
-          "unclaimed": 13007.971527,
+          "unclaimed": 13021.324825,
           "users": 2832,
           "scannedToBlock": 25306958
         },
@@ -123,7 +123,7 @@
           "scannedToBlock": 25306958
         }
       },
-      "scannedToBlock": 25359361,
+      "scannedToBlock": 25360986,
       "complete": true,
       "name": "Ethereum"
     },
@@ -219,7 +219,7 @@
           "scannedToBlock": 152868301
         }
       },
-      "scannedToBlock": 153183508,
+      "scannedToBlock": 153193277,
       "complete": true,
       "name": "Optimism"
     },
@@ -258,7 +258,7 @@
           "scannedToBlock": 96693166
         }
       },
-      "scannedToBlock": 96918048,
+      "scannedToBlock": 96927654,
       "complete": true,
       "name": "Mantle"
     }
