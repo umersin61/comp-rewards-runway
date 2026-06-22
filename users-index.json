@@ -1,10 +1,10 @@
 {
   "mainnet": {
     "users": 19294,
-    "owed": 37694.237149,
+    "owed": 37766.850804,
     "claimed": 452394.990888,
     "file": "users-mainnet.json",
-    "bytes": 1441835
+    "bytes": 1441824
   },
   "base": {
     "users": 40858,
@@ -43,10 +43,10 @@
   },
   "linea": {
     "users": 1291,
-    "owed": 374.268997,
-    "claimed": 4287.220973,
+    "owed": 372.17949,
+    "claimed": 4289.31048,
     "file": "users-linea.json",
-    "bytes": 97436
+    "bytes": 97442
   },
   "mantle": {
     "users": 358,
