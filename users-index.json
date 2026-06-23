@@ -1,10 +1,10 @@
 {
   "mainnet": {
     "users": 19294,
-    "owed": 37766.850804,
+    "owed": 37824.783228,
     "claimed": 452394.990888,
     "file": "users-mainnet.json",
-    "bytes": 1441824
+    "bytes": 1441833
   },
   "base": {
     "users": 40858,
@@ -22,10 +22,10 @@
   },
   "unichain": {
     "users": 3753,
-    "owed": 918.728241,
-    "claimed": 6304.034433,
+    "owed": 918.34781,
+    "claimed": 6304.414864,
     "file": "users-unichain.json",
-    "bytes": 278092
+    "bytes": 278098
   },
   "arbitrum": {
     "users": 710,
