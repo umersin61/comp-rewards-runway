@@ -1,10 +1,10 @@
 {
   "mainnet": {
-    "users": 19294,
-    "owed": 37916.528784,
+    "users": 19295,
+    "owed": 37957.539025,
     "claimed": 452394.990888,
     "file": "users-mainnet.json",
-    "bytes": 1441821
+    "bytes": 1441927
   },
   "base": {
     "users": 40858,
